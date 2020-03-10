@@ -15,6 +15,8 @@ import (
 	cr "github.com/go-openapi/runtime/client"
 
 	strfmt "github.com/go-openapi/strfmt"
+
+	"github.com/innovationnorway/go-databricks/models"
 )
 
 // NewCreateParams creates a new CreateParams object
@@ -62,7 +64,7 @@ for the create operation typically these are written to a http.Request
 type CreateParams struct {
 
 	/*Body*/
-	Body CreateBody
+	Body *models.ClusterAttributes
 
 	timeout    time.Duration
 	Context    context.Context
@@ -103,13 +105,13 @@ func (o *CreateParams) SetHTTPClient(client *http.Client) {
 }
 
 // WithBody adds the body to the create params
-func (o *CreateParams) WithBody(body CreateBody) *CreateParams {
+func (o *CreateParams) WithBody(body *models.ClusterAttributes) *CreateParams {
 	o.SetBody(body)
 	return o
 }
 
 // SetBody adds the body to the create params
-func (o *CreateParams) SetBody(body CreateBody) {
+func (o *CreateParams) SetBody(body *models.ClusterAttributes) {
 	o.Body = body
 }
 
@@ -121,8 +123,10 @@ func (o *CreateParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Regist
 	}
 	var res []error
 
-	if err := r.SetBodyParam(o.Body); err != nil {
-		return err
+	if o.Body != nil {
+		if err := r.SetBodyParam(o.Body); err != nil {
+			return err
+		}
 	}
 
 	if len(res) > 0 {

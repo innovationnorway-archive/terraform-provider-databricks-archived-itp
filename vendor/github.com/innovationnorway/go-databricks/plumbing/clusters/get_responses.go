@@ -30,9 +30,21 @@ func (o *GetReader) ReadResponse(response runtime.ClientResponse, consumer runti
 			return nil, err
 		}
 		return result, nil
-
+	case 403:
+		result := NewGetForbidden()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
 	default:
-		return nil, runtime.NewAPIError("unknown error", response, response.Code())
+		result := NewGetDefault(response.Code())
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		if response.Code()/100 == 2 {
+			return result, nil
+		}
+		return nil, result
 	}
 }
 
@@ -60,6 +72,79 @@ func (o *GetOK) GetPayload() *models.ClusterInfo {
 func (o *GetOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	o.Payload = new(models.ClusterInfo)
+
+	// response payload
+	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
+		return err
+	}
+
+	return nil
+}
+
+// NewGetForbidden creates a GetForbidden with default headers values
+func NewGetForbidden() *GetForbidden {
+	return &GetForbidden{}
+}
+
+/*GetForbidden handles this case with default header values.
+
+invalid access token
+*/
+type GetForbidden struct {
+	Payload string
+}
+
+func (o *GetForbidden) Error() string {
+	return fmt.Sprintf("[GET /clusters/get][%d] getForbidden  %+v", 403, o.Payload)
+}
+
+func (o *GetForbidden) GetPayload() string {
+	return o.Payload
+}
+
+func (o *GetForbidden) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	// response payload
+	if err := consumer.Consume(response.Body(), &o.Payload); err != nil && err != io.EOF {
+		return err
+	}
+
+	return nil
+}
+
+// NewGetDefault creates a GetDefault with default headers values
+func NewGetDefault(code int) *GetDefault {
+	return &GetDefault{
+		_statusCode: code,
+	}
+}
+
+/*GetDefault handles this case with default header values.
+
+error
+*/
+type GetDefault struct {
+	_statusCode int
+
+	Payload *models.Error
+}
+
+// Code gets the status code for the get default response
+func (o *GetDefault) Code() int {
+	return o._statusCode
+}
+
+func (o *GetDefault) Error() string {
+	return fmt.Sprintf("[GET /clusters/get][%d] get default  %+v", o._statusCode, o.Payload)
+}
+
+func (o *GetDefault) GetPayload() *models.Error {
+	return o.Payload
+}
+
+func (o *GetDefault) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	o.Payload = new(models.Error)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {

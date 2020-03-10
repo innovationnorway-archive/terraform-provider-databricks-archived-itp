@@ -239,6 +239,134 @@ func dataSourceDatabricksCluster() *schema.Resource {
 				},
 			},
 
+			"cluster_log_conf": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"dbfs": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"destination": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+
+						"s3": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"destination": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+
+									"region": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+
+									"endpoint": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+
+									"enable_encryption": {
+										Type:     schema.TypeBool,
+										Computed: true,
+									},
+
+									"encryption_type": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+
+									"kms_key": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+
+									"canned_acl": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+
+			"init_scripts": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"dbfs": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"destination": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+
+						"s3": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"destination": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+
+									"region": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+
+									"endpoint": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+
+									"enable_encryption": {
+										Type:     schema.TypeBool,
+										Computed: true,
+									},
+
+									"encryption_type": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+
+									"kms_key": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+
+									"canned_acl": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+
 			"docker_image": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -415,6 +543,8 @@ func dataSourceDatabricksClusterRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("driver_node_type_id", resp.Payload.DriverNodeTypeID)
 	d.Set("ssh_public_keys", resp.Payload.SSHPublicKeys)
 	d.Set("custom_tags", resp.Payload.CustomTags)
+	d.Set("cluster_log_conf", flattenClusterLogConf(resp.Payload.ClusterLogConf))
+	d.Set("init_scripts", flattenInitScripts(resp.Payload.InitScripts))
 	d.Set("docker_image", flattenDockerImage(resp.Payload.DockerImage))
 	d.Set("spark_env_vars", resp.Payload.SparkEnvVars)
 	d.Set("autotermination_minutes", resp.Payload.AutoterminationMinutes)
@@ -519,6 +649,68 @@ func flattenAwsAttributes(attributes *models.AwsAttributes) []interface{} {
 	values["ebs_volume_type"] = attributes.EbsVolumeType
 	values["ebs_volume_count"] = attributes.EbsVolumeCount
 	values["ebs_volume_size"] = attributes.EbsVolumeSize
+
+	return []interface{}{values}
+}
+
+func flattenClusterLogConf(clusterLogConf *models.ClusterLogConf) []interface{} {
+	if clusterLogConf == nil {
+		return []interface{}{}
+	}
+
+	values := make(map[string]interface{})
+
+	values["dbfs"] = flattenStorageInfoDbfs(clusterLogConf.Dbfs)
+	values["s3"] = flattenStorageInfoS3(clusterLogConf.S3)
+
+	return []interface{}{values}
+}
+
+func flattenInitScripts(initScripts []*models.InitScriptInfo) []interface{} {
+	result := make([]interface{}, 0)
+
+	if initScripts == nil {
+		return []interface{}{}
+	}
+
+	for _, initScript := range initScripts {
+		values := make(map[string]interface{})
+
+		values["dbfs"] = flattenStorageInfoDbfs(initScript.Dbfs)
+		values["s3"] = flattenStorageInfoS3(initScript.S3)
+
+		result = append(result, values)
+	}
+
+	return result
+}
+
+func flattenStorageInfoDbfs(storageInfo *models.DbfsStorageInfo) []interface{} {
+	if storageInfo == nil {
+		return []interface{}{}
+	}
+
+	values := make(map[string]interface{})
+
+	values["destination"] = storageInfo.Destination
+
+	return []interface{}{values}
+}
+
+func flattenStorageInfoS3(storageInfo *models.S3StorageInfo) []interface{} {
+	if storageInfo == nil {
+		return []interface{}{}
+	}
+
+	values := make(map[string]interface{})
+
+	values["destination"] = storageInfo.Destination
+	values["region"] = storageInfo.Region
+	values["endpoint"] = storageInfo.Endpoint
+	values["enable_encryption"] = storageInfo.EnableEncryption
+	values["encryption_type"] = storageInfo.EncryptionType
+	values["kms_key"] = storageInfo.KmsKey
+	values["canned_acl"] = storageInfo.CannedACL
 
 	return []interface{}{values}
 }

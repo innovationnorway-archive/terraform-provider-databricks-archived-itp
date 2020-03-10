@@ -8,9 +8,7 @@ package clusters
 import (
 	"fmt"
 	"io"
-	"strconv"
 
-	"github.com/go-openapi/errors"
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/swag"
 
@@ -33,9 +31,21 @@ func (o *CreateReader) ReadResponse(response runtime.ClientResponse, consumer ru
 			return nil, err
 		}
 		return result, nil
-
+	case 403:
+		result := NewCreateForbidden()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
 	default:
-		return nil, runtime.NewAPIError("unknown error", response, response.Code())
+		result := NewCreateDefault(response.Code())
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		if response.Code()/100 == 2 {
+			return result, nil
+		}
+		return nil, result
 	}
 }
 
@@ -72,268 +82,76 @@ func (o *CreateOK) readResponse(response runtime.ClientResponse, consumer runtim
 	return nil
 }
 
-/*CreateBody create body
-swagger:model CreateBody
+// NewCreateForbidden creates a CreateForbidden with default headers values
+func NewCreateForbidden() *CreateForbidden {
+	return &CreateForbidden{}
+}
+
+/*CreateForbidden handles this case with default header values.
+
+invalid access token
 */
-type CreateBody struct {
-
-	// autoscale
-	Autoscale *models.AutoScale `json:"autoscale,omitempty"`
-
-	// autotermination minutes
-	AutoterminationMinutes int32 `json:"autotermination_minutes,omitempty"`
-
-	// aws attributes
-	AwsAttributes *models.AwsAttributes `json:"aws_attributes,omitempty"`
-
-	// cluster log conf
-	ClusterLogConf *models.ClusterLogConf `json:"cluster_log_conf,omitempty"`
-
-	// cluster name
-	ClusterName string `json:"cluster_name,omitempty"`
-
-	// custom tags
-	CustomTags models.ClusterTag `json:"custom_tags,omitempty"`
-
-	// docker image
-	DockerImage *models.DockerImage `json:"docker_image,omitempty"`
-
-	// driver node type id
-	DriverNodeTypeID string `json:"driver_node_type_id,omitempty"`
-
-	// enable elastic disk
-	EnableElasticDisk bool `json:"enable_elastic_disk,omitempty"`
-
-	// idempotency token
-	IdempotencyToken string `json:"idempotency_token,omitempty"`
-
-	// init scripts
-	InitScripts []*models.InitScriptInfo `json:"init_scripts"`
-
-	// instance pool id
-	InstancePoolID string `json:"instance_pool_id,omitempty"`
-
-	// node type id
-	NodeTypeID string `json:"node_type_id,omitempty"`
-
-	// num workers
-	NumWorkers int64 `json:"num_workers,omitempty"`
-
-	// spark conf
-	SparkConf models.SparkConfPair `json:"spark_conf,omitempty"`
-
-	// spark env vars
-	SparkEnvVars models.SparkEnvPair `json:"spark_env_vars,omitempty"`
-
-	// spark version
-	SparkVersion string `json:"spark_version,omitempty"`
-
-	// ssh public keys
-	SSHPublicKeys []string `json:"ssh_public_keys"`
+type CreateForbidden struct {
+	Payload string
 }
 
-// Validate validates this create body
-func (o *CreateBody) Validate(formats strfmt.Registry) error {
-	var res []error
-
-	if err := o.validateAutoscale(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := o.validateAwsAttributes(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := o.validateClusterLogConf(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := o.validateCustomTags(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := o.validateDockerImage(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := o.validateInitScripts(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := o.validateSparkConf(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := o.validateSparkEnvVars(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if len(res) > 0 {
-		return errors.CompositeValidationError(res...)
-	}
-	return nil
+func (o *CreateForbidden) Error() string {
+	return fmt.Sprintf("[POST /clusters/create][%d] createForbidden  %+v", 403, o.Payload)
 }
 
-func (o *CreateBody) validateAutoscale(formats strfmt.Registry) error {
-
-	if swag.IsZero(o.Autoscale) { // not required
-		return nil
-	}
-
-	if o.Autoscale != nil {
-		if err := o.Autoscale.Validate(formats); err != nil {
-			if ve, ok := err.(*errors.Validation); ok {
-				return ve.ValidateName("body" + "." + "autoscale")
-			}
-			return err
-		}
-	}
-
-	return nil
+func (o *CreateForbidden) GetPayload() string {
+	return o.Payload
 }
 
-func (o *CreateBody) validateAwsAttributes(formats strfmt.Registry) error {
+func (o *CreateForbidden) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	if swag.IsZero(o.AwsAttributes) { // not required
-		return nil
-	}
-
-	if o.AwsAttributes != nil {
-		if err := o.AwsAttributes.Validate(formats); err != nil {
-			if ve, ok := err.(*errors.Validation); ok {
-				return ve.ValidateName("body" + "." + "aws_attributes")
-			}
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (o *CreateBody) validateClusterLogConf(formats strfmt.Registry) error {
-
-	if swag.IsZero(o.ClusterLogConf) { // not required
-		return nil
-	}
-
-	if o.ClusterLogConf != nil {
-		if err := o.ClusterLogConf.Validate(formats); err != nil {
-			if ve, ok := err.(*errors.Validation); ok {
-				return ve.ValidateName("body" + "." + "cluster_log_conf")
-			}
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (o *CreateBody) validateCustomTags(formats strfmt.Registry) error {
-
-	if swag.IsZero(o.CustomTags) { // not required
-		return nil
-	}
-
-	if err := o.CustomTags.Validate(formats); err != nil {
-		if ve, ok := err.(*errors.Validation); ok {
-			return ve.ValidateName("body" + "." + "custom_tags")
-		}
+	// response payload
+	if err := consumer.Consume(response.Body(), &o.Payload); err != nil && err != io.EOF {
 		return err
 	}
 
 	return nil
 }
 
-func (o *CreateBody) validateDockerImage(formats strfmt.Registry) error {
-
-	if swag.IsZero(o.DockerImage) { // not required
-		return nil
+// NewCreateDefault creates a CreateDefault with default headers values
+func NewCreateDefault(code int) *CreateDefault {
+	return &CreateDefault{
+		_statusCode: code,
 	}
-
-	if o.DockerImage != nil {
-		if err := o.DockerImage.Validate(formats); err != nil {
-			if ve, ok := err.(*errors.Validation); ok {
-				return ve.ValidateName("body" + "." + "docker_image")
-			}
-			return err
-		}
-	}
-
-	return nil
 }
 
-func (o *CreateBody) validateInitScripts(formats strfmt.Registry) error {
+/*CreateDefault handles this case with default header values.
 
-	if swag.IsZero(o.InitScripts) { // not required
-		return nil
-	}
+error
+*/
+type CreateDefault struct {
+	_statusCode int
 
-	for i := 0; i < len(o.InitScripts); i++ {
-		if swag.IsZero(o.InitScripts[i]) { // not required
-			continue
-		}
-
-		if o.InitScripts[i] != nil {
-			if err := o.InitScripts[i].Validate(formats); err != nil {
-				if ve, ok := err.(*errors.Validation); ok {
-					return ve.ValidateName("body" + "." + "init_scripts" + "." + strconv.Itoa(i))
-				}
-				return err
-			}
-		}
-
-	}
-
-	return nil
+	Payload *models.Error
 }
 
-func (o *CreateBody) validateSparkConf(formats strfmt.Registry) error {
+// Code gets the status code for the create default response
+func (o *CreateDefault) Code() int {
+	return o._statusCode
+}
 
-	if swag.IsZero(o.SparkConf) { // not required
-		return nil
-	}
+func (o *CreateDefault) Error() string {
+	return fmt.Sprintf("[POST /clusters/create][%d] create default  %+v", o._statusCode, o.Payload)
+}
 
-	if err := o.SparkConf.Validate(formats); err != nil {
-		if ve, ok := err.(*errors.Validation); ok {
-			return ve.ValidateName("body" + "." + "spark_conf")
-		}
+func (o *CreateDefault) GetPayload() *models.Error {
+	return o.Payload
+}
+
+func (o *CreateDefault) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	o.Payload = new(models.Error)
+
+	// response payload
+	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
 		return err
 	}
 
-	return nil
-}
-
-func (o *CreateBody) validateSparkEnvVars(formats strfmt.Registry) error {
-
-	if swag.IsZero(o.SparkEnvVars) { // not required
-		return nil
-	}
-
-	if err := o.SparkEnvVars.Validate(formats); err != nil {
-		if ve, ok := err.(*errors.Validation); ok {
-			return ve.ValidateName("body" + "." + "spark_env_vars")
-		}
-		return err
-	}
-
-	return nil
-}
-
-// MarshalBinary interface implementation
-func (o *CreateBody) MarshalBinary() ([]byte, error) {
-	if o == nil {
-		return nil, nil
-	}
-	return swag.WriteJSON(o)
-}
-
-// UnmarshalBinary interface implementation
-func (o *CreateBody) UnmarshalBinary(b []byte) error {
-	var res CreateBody
-	if err := swag.ReadJSON(b, &res); err != nil {
-		return err
-	}
-	*o = res
 	return nil
 }
 

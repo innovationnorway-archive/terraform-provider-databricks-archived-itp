@@ -8,5 +8,5 @@ require (
 	github.com/hashicorp/go-cleanhttp v0.5.1
 	github.com/hashicorp/terraform v0.12.23
 	github.com/hashicorp/terraform-plugin-sdk v1.7.0
-	github.com/innovationnorway/go-databricks v0.0.0-20200308205640-621e9cb6cf15
+	github.com/innovationnorway/go-databricks v0.0.0-20200310144818-5e772f6f42b4
 )

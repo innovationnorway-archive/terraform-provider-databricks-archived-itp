@@ -145,3 +145,75 @@ A `aws_attributes` block exports the following:
 * `ebs_volume_count` - The number of volumes launched for each instance.
 
 * `ebs_volume_size` - The size of each EBS volume (in GiB) launched for each instance.
+
+---
+
+A `cluster_log_conf` block exports the following:
+
+* `dbfs` - A `dbfs` block as defined below. DBFS location of cluster log.
+
+* `s3` - A `s3` block as defined below. S3 location of cluster log.
+
+---
+
+A `init_scripts` block exports the following:
+
+* `dbfs` - A `dbfs` block as defined below. DBFS location of init script.
+
+* `s3` - A `s3` block as defined below. S3 location of init script.
+
+---
+
+A `dbfs` block exports the following:
+
+* `destination` - DBFS destination, e.g. `dbfs:/my/path`.
+
+---
+
+A `s3` block exports the following:
+
+* `destination` - S3 destination, e.g. `s3://my-bucket/some-prefix`.
+
+* `region` - S3 region, e.g. `us-west-2`.
+
+* `endpoint` - S3 endpoint, e.g. `https://s3-us-west-2.amazonaws.com`.
+
+* `enable_encryption` - Wheter server side encryption is enabled.
+
+* `encryption_type` - The encryption type, it could be `sse-s3` or `sse-kms`.
+
+* `kms_key` - KMS key used if encryption is enabled and encryption type is set to `sse-kms`.
+
+* `canned_acl` - Canned access control list, e.g. `bucket-owner-full-control`.
+
+---
+
+A `docker_image` block exports the following:
+
+* `url` - URL for the Docker image.
+
+* `basic_auth` - A `docker_basic_auth` block as defined below. Basic authentication information for Docker repository.
+
+---
+
+A `docker_basic_auth` block exports the following:
+
+* `username` - User name for the Docker repository.
+
+* `password` - Password for the Docker repository.
+
+---
+
+A `cluster_log_status` block exports the following:
+
+* `last_attempted` - The timestamp of last attempt. If the last attempt fails, `last_exception` will contain the exception in the last attempt.
+
+* `last_exception` - The exception thrown in the last attempt, it would be empty if there is no exception in last attempted.
+
+---
+
+A `termination_reason` block exports the following:
+
+* `code` - Status code indicating why a cluster was terminated.
+
+* `parameters` - List of parameters that provide additional information about why a cluster was terminated.

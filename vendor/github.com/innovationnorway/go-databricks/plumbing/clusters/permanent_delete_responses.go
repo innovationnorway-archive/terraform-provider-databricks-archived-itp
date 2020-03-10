@@ -7,11 +7,14 @@ package clusters
 
 import (
 	"fmt"
+	"io"
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/swag"
 
 	strfmt "github.com/go-openapi/strfmt"
+
+	"github.com/innovationnorway/go-databricks/models"
 )
 
 // PermanentDeleteReader is a Reader for the PermanentDelete structure.
@@ -28,9 +31,21 @@ func (o *PermanentDeleteReader) ReadResponse(response runtime.ClientResponse, co
 			return nil, err
 		}
 		return result, nil
-
+	case 403:
+		result := NewPermanentDeleteForbidden()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
 	default:
-		return nil, runtime.NewAPIError("unknown error", response, response.Code())
+		result := NewPermanentDeleteDefault(response.Code())
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		if response.Code()/100 == 2 {
+			return result, nil
+		}
+		return nil, result
 	}
 }
 
@@ -51,6 +66,79 @@ func (o *PermanentDeleteOK) Error() string {
 }
 
 func (o *PermanentDeleteOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	return nil
+}
+
+// NewPermanentDeleteForbidden creates a PermanentDeleteForbidden with default headers values
+func NewPermanentDeleteForbidden() *PermanentDeleteForbidden {
+	return &PermanentDeleteForbidden{}
+}
+
+/*PermanentDeleteForbidden handles this case with default header values.
+
+invalid access token
+*/
+type PermanentDeleteForbidden struct {
+	Payload string
+}
+
+func (o *PermanentDeleteForbidden) Error() string {
+	return fmt.Sprintf("[POST /clusters/permanent-delete][%d] permanentDeleteForbidden  %+v", 403, o.Payload)
+}
+
+func (o *PermanentDeleteForbidden) GetPayload() string {
+	return o.Payload
+}
+
+func (o *PermanentDeleteForbidden) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	// response payload
+	if err := consumer.Consume(response.Body(), &o.Payload); err != nil && err != io.EOF {
+		return err
+	}
+
+	return nil
+}
+
+// NewPermanentDeleteDefault creates a PermanentDeleteDefault with default headers values
+func NewPermanentDeleteDefault(code int) *PermanentDeleteDefault {
+	return &PermanentDeleteDefault{
+		_statusCode: code,
+	}
+}
+
+/*PermanentDeleteDefault handles this case with default header values.
+
+error
+*/
+type PermanentDeleteDefault struct {
+	_statusCode int
+
+	Payload *models.Error
+}
+
+// Code gets the status code for the permanent delete default response
+func (o *PermanentDeleteDefault) Code() int {
+	return o._statusCode
+}
+
+func (o *PermanentDeleteDefault) Error() string {
+	return fmt.Sprintf("[POST /clusters/permanent-delete][%d] permanentDelete default  %+v", o._statusCode, o.Payload)
+}
+
+func (o *PermanentDeleteDefault) GetPayload() *models.Error {
+	return o.Payload
+}
+
+func (o *PermanentDeleteDefault) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	o.Payload = new(models.Error)
+
+	// response payload
+	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
+		return err
+	}
 
 	return nil
 }
