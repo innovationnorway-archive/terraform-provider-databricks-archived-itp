@@ -1,13 +1,15 @@
 TEST?=$$(go list ./... |grep -v 'vendor')
 GOFMT_FILES?=$$(find . -name '*.go' |grep -v vendor)
 WEBSITE_REPO=github.com/hashicorp/terraform-website
-PKG_NAME=scaffolding
-COVER_TEST?=$$(go list ./... |grep -v 'vendor')
+PKG_NAME=databricks
 
 .EXPORT_ALL_VARIABLES:
   GOFLAGS=-mod=vendor
 
 default: build
+
+tools:
+	GO111MODULE=off go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
 
 build: fmtcheck
 	go install
@@ -40,6 +42,10 @@ vet:
 		exit 1; \
 	fi
 
+lint:
+	@echo "==> Checking source code against linters..."
+	golangci-lint run ./...
+
 fmt:
 	gofmt -w $(GOFMT_FILES)
 
@@ -71,4 +77,4 @@ ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
 endif
 	@$(MAKE) -C $(GOPATH)/src/$(WEBSITE_REPO) website-provider-test PROVIDER_PATH=$(shell pwd) PROVIDER_NAME=$(PKG_NAME)
 
-.PHONY: build test testacc testrace cover vet fmt fmtcheck errcheck test-compile website website-test
+.PHONY: build test testacc testrace cover vet fmt fmtcheck errcheck lint tools test-compile website website-test

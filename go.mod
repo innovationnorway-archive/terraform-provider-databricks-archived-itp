@@ -1,5 +1,12 @@
-module github.com/terraform-providers/terraform-provider-scaffolding
+module github.com/innovationnorway/terraform-provider-databricks
 
-go 1.12
+go 1.13
 
-require github.com/hashicorp/terraform-plugin-sdk v1.4.1
+require (
+	github.com/go-openapi/runtime v0.19.12
+	github.com/go-openapi/strfmt v0.19.5
+	github.com/hashicorp/go-cleanhttp v0.5.1
+	github.com/hashicorp/terraform v0.12.23
+	github.com/hashicorp/terraform-plugin-sdk v1.7.0
+	github.com/innovationnorway/go-databricks v0.0.0-20200308205640-621e9cb6cf15
+)
