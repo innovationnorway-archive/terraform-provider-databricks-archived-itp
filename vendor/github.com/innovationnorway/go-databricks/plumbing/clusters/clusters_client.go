@@ -41,6 +41,8 @@ type ClientService interface {
 
 	Resize(params *ResizeParams, authInfo runtime.ClientAuthInfoWriter) (*ResizeOK, error)
 
+	Restart(params *RestartParams, authInfo runtime.ClientAuthInfoWriter) (*RestartOK, error)
+
 	SetTransport(transport runtime.ClientTransport)
 }
 
@@ -313,6 +315,40 @@ func (a *Client) Resize(params *ResizeParams, authInfo runtime.ClientAuthInfoWri
 	}
 	// unexpected success response
 	unexpectedSuccess := result.(*ResizeDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+  Restart restart API
+*/
+func (a *Client) Restart(params *RestartParams, authInfo runtime.ClientAuthInfoWriter) (*RestartOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewRestartParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "restart",
+		Method:             "POST",
+		PathPattern:        "/clusters/restart",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"https"},
+		Params:             params,
+		Reader:             &RestartReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*RestartOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*RestartDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 
