@@ -568,27 +568,27 @@ func dataSourceDatabricksClusterRead(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func flattenAutoscale(autoscale *models.AutoScale) []interface{} {
-	if autoscale == nil {
+func flattenAutoscale(input *models.AutoScale) []interface{} {
+	if input == nil {
 		return []interface{}{}
 	}
 
 	values := make(map[string]interface{})
 
-	values["min_workers"] = autoscale.MinWorkers
-	values["max_workers"] = autoscale.MaxWorkers
+	values["min_workers"] = input.MinWorkers
+	values["max_workers"] = input.MaxWorkers
 
 	return []interface{}{values}
 }
 
-func flattenExecutors(executors []*models.SparkNode) []interface{} {
+func flattenExecutors(input []*models.SparkNode) []interface{} {
 	result := make([]interface{}, 0)
 
-	if executors == nil {
+	if input == nil {
 		return []interface{}{}
 	}
 
-	for _, executor := range executors {
+	for _, executor := range input {
 		values := make(map[string]interface{})
 
 		values["private_ip"] = executor.PrivateIP
@@ -605,79 +605,79 @@ func flattenExecutors(executors []*models.SparkNode) []interface{} {
 	return result
 }
 
-func flattenDriver(driver *models.SparkNode) []interface{} {
-	if driver == nil {
+func flattenDriver(input *models.SparkNode) []interface{} {
+	if input == nil {
 		return []interface{}{}
 	}
 
 	values := make(map[string]interface{})
 
-	values["private_ip"] = driver.PrivateIP
-	values["public_dns"] = driver.PublicDNS
-	values["node_id"] = driver.NodeID
-	values["instance_id"] = driver.InstanceID
-	values["start_timestamp"] = driver.StartTimestamp
-	values["node_aws_attributes"] = flattenNodeAwsAttributes(driver.NodeAwsAttributes)
-	values["host_private_ip"] = driver.HostPrivateIP
+	values["private_ip"] = input.PrivateIP
+	values["public_dns"] = input.PublicDNS
+	values["node_id"] = input.NodeID
+	values["instance_id"] = input.InstanceID
+	values["start_timestamp"] = input.StartTimestamp
+	values["node_aws_attributes"] = flattenNodeAwsAttributes(input.NodeAwsAttributes)
+	values["host_private_ip"] = input.HostPrivateIP
 
 	return []interface{}{values}
 }
 
-func flattenNodeAwsAttributes(attributes *models.SparkNodeAwsAttributes) []interface{} {
-	if attributes == nil {
+func flattenNodeAwsAttributes(input *models.SparkNodeAwsAttributes) []interface{} {
+	if input == nil {
 		return []interface{}{}
 	}
 
 	values := make(map[string]interface{})
 
-	values["is_spot"] = attributes.IsSpot
+	values["is_spot"] = input.IsSpot
 
 	return []interface{}{values}
 }
 
-func flattenAwsAttributes(attributes *models.AwsAttributes) []interface{} {
-	if attributes == nil {
+func flattenAwsAttributes(input *models.AwsAttributes) []interface{} {
+	if input == nil {
 		return []interface{}{}
 	}
 
 	values := make(map[string]interface{})
 
-	values["first_on_demand"] = attributes.FirstOnDemand
-	values["availability"] = attributes.Availability
-	values["zone_id"] = attributes.ZoneID
-	values["instance_profile_arn"] = attributes.InstanceProfileArn
-	values["ebs_volume_type"] = attributes.EbsVolumeType
-	values["ebs_volume_count"] = attributes.EbsVolumeCount
-	values["ebs_volume_size"] = attributes.EbsVolumeSize
+	values["first_on_demand"] = input.FirstOnDemand
+	values["availability"] = input.Availability
+	values["zone_id"] = input.ZoneID
+	values["instance_profile_arn"] = input.InstanceProfileArn
+	values["ebs_volume_type"] = input.EbsVolumeType
+	values["ebs_volume_count"] = input.EbsVolumeCount
+	values["ebs_volume_size"] = input.EbsVolumeSize
 
 	return []interface{}{values}
 }
 
-func flattenClusterLogConf(clusterLogConf *models.ClusterLogConf) []interface{} {
-	if clusterLogConf == nil {
+func flattenClusterLogConf(input *models.ClusterLogConf) []interface{} {
+	if input == nil {
 		return []interface{}{}
 	}
 
 	values := make(map[string]interface{})
 
-	values["dbfs"] = flattenStorageInfoDbfs(clusterLogConf.Dbfs)
-	values["s3"] = flattenStorageInfoS3(clusterLogConf.S3)
+	values["dbfs"] = flattenStorageInfoDbfs(input.Dbfs)
+	values["s3"] = flattenStorageInfoS3(input.S3)
 
 	return []interface{}{values}
 }
 
-func flattenInitScripts(initScripts []*models.InitScriptInfo) []interface{} {
+func flattenInitScripts(input []*models.InitScriptInfo) []interface{} {
 	result := make([]interface{}, 0)
 
-	if initScripts == nil {
+	if input == nil {
 		return []interface{}{}
 	}
 
-	for _, initScript := range initScripts {
+	for _, item := range input {
 		values := make(map[string]interface{})
 
-		values["dbfs"] = flattenStorageInfoDbfs(initScript.Dbfs)
-		values["s3"] = flattenStorageInfoS3(initScript.S3)
+		values["dbfs"] = flattenStorageInfoDbfs(item.Dbfs)
+		values["s3"] = flattenStorageInfoS3(item.S3)
 
 		result = append(result, values)
 	}
@@ -685,84 +685,84 @@ func flattenInitScripts(initScripts []*models.InitScriptInfo) []interface{} {
 	return result
 }
 
-func flattenStorageInfoDbfs(storageInfo *models.DbfsStorageInfo) []interface{} {
-	if storageInfo == nil {
+func flattenStorageInfoDbfs(input *models.DbfsStorageInfo) []interface{} {
+	if input == nil {
 		return []interface{}{}
 	}
 
 	values := make(map[string]interface{})
 
-	values["destination"] = storageInfo.Destination
+	values["destination"] = input.Destination
 
 	return []interface{}{values}
 }
 
-func flattenStorageInfoS3(storageInfo *models.S3StorageInfo) []interface{} {
-	if storageInfo == nil {
+func flattenStorageInfoS3(input *models.S3StorageInfo) []interface{} {
+	if input == nil {
 		return []interface{}{}
 	}
 
 	values := make(map[string]interface{})
 
-	values["destination"] = storageInfo.Destination
-	values["region"] = storageInfo.Region
-	values["endpoint"] = storageInfo.Endpoint
-	values["enable_encryption"] = storageInfo.EnableEncryption
-	values["encryption_type"] = storageInfo.EncryptionType
-	values["kms_key"] = storageInfo.KmsKey
-	values["canned_acl"] = storageInfo.CannedACL
+	values["destination"] = input.Destination
+	values["region"] = input.Region
+	values["endpoint"] = input.Endpoint
+	values["enable_encryption"] = input.EnableEncryption
+	values["encryption_type"] = input.EncryptionType
+	values["kms_key"] = input.KmsKey
+	values["canned_acl"] = input.CannedACL
 
 	return []interface{}{values}
 }
 
-func flattenDockerImage(dockerImage *models.DockerImage) []interface{} {
-	if dockerImage == nil {
+func flattenDockerImage(input *models.DockerImage) []interface{} {
+	if input == nil {
 		return []interface{}{}
 	}
 
 	values := make(map[string]interface{})
 
-	values["url"] = dockerImage.URL
-	values["basic_auth"] = flattenDockerBasicAuth(dockerImage.BasicAuth)
+	values["url"] = input.URL
+	values["basic_auth"] = flattenDockerBasicAuth(input.BasicAuth)
 
 	return []interface{}{values}
 }
 
-func flattenDockerBasicAuth(basicAuth *models.DockerBasicAuth) []interface{} {
-	if basicAuth == nil {
+func flattenDockerBasicAuth(input *models.DockerBasicAuth) []interface{} {
+	if input == nil {
 		return []interface{}{}
 	}
 
 	values := make(map[string]interface{})
 
-	values["username"] = basicAuth.Username
-	values["password"] = basicAuth.Password
+	values["username"] = input.Username
+	values["password"] = input.Password
 
 	return []interface{}{values}
 }
 
-func flattenClusterLogStatus(logStatus *models.LogSyncStatus) []interface{} {
-	if logStatus == nil {
+func flattenClusterLogStatus(input *models.LogSyncStatus) []interface{} {
+	if input == nil {
 		return []interface{}{}
 	}
 
 	values := make(map[string]interface{})
 
-	values["last_attempted"] = logStatus.LastAttempted
-	values["last_exception"] = logStatus.LastException
+	values["last_attempted"] = input.LastAttempted
+	values["last_exception"] = input.LastException
 
 	return []interface{}{values}
 }
 
-func flattenTerminationReason(terminationReason *models.TerminationReason) []interface{} {
-	if terminationReason == nil {
+func flattenTerminationReason(input *models.TerminationReason) []interface{} {
+	if input == nil {
 		return []interface{}{}
 	}
 
 	values := make(map[string]interface{})
 
-	values["code"] = terminationReason.Code
-	values["parameters"] = terminationReason.Parameters
+	values["code"] = input.Code
+	values["parameters"] = input.Parameters
 
 	return []interface{}{values}
 }
