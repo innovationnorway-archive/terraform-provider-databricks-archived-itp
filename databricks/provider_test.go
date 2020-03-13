@@ -1,6 +1,7 @@
 package databricks
 
 import (
+	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -25,4 +26,14 @@ func TestProvider(t *testing.T) {
 
 func TestProvider_impl(t *testing.T) {
 	var _ terraform.ResourceProvider = Provider()
+}
+
+func testAccPreCheck(t *testing.T) {
+	if v := os.Getenv("DATABRICKS_HOST"); v == "" {
+		t.Fatal("DATABRICKS_HOST must be set for acceptance tests")
+	}
+
+	if v := os.Getenv("DATABRICKS_TOKEN"); v == "" {
+		t.Fatal("DATABRICKS_TOKEN must be set for acceptance tests")
+	}
 }
