@@ -35,6 +35,8 @@ type ClientService interface {
 
 	List(params *ListParams, authInfo runtime.ClientAuthInfoWriter) (*ListOK, error)
 
+	ListNodeTypes(params *ListNodeTypesParams, authInfo runtime.ClientAuthInfoWriter) (*ListNodeTypesOK, error)
+
 	PermanentDelete(params *PermanentDeleteParams, authInfo runtime.ClientAuthInfoWriter) (*PermanentDeleteOK, error)
 
 	Resize(params *ResizeParams, authInfo runtime.ClientAuthInfoWriter) (*ResizeOK, error)
@@ -209,6 +211,40 @@ func (a *Client) List(params *ListParams, authInfo runtime.ClientAuthInfoWriter)
 	}
 	// unexpected success response
 	unexpectedSuccess := result.(*ListDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+  ListNodeTypes list node types API
+*/
+func (a *Client) ListNodeTypes(params *ListNodeTypesParams, authInfo runtime.ClientAuthInfoWriter) (*ListNodeTypesOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewListNodeTypesParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "listNodeTypes",
+		Method:             "GET",
+		PathPattern:        "/clusters/list-node-types",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"https"},
+		Params:             params,
+		Reader:             &ListNodeTypesReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*ListNodeTypesOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*ListNodeTypesDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 

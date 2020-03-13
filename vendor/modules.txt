@@ -146,9 +146,11 @@ github.com/hashicorp/hcl/v2/hclwrite
 github.com/hashicorp/hcl/v2/json
 # github.com/hashicorp/terraform v0.12.23
 github.com/hashicorp/terraform/helper/logging
-# github.com/hashicorp/terraform-plugin-sdk v1.7.0
+# github.com/hashicorp/terraform-plugin-sdk v1.8.0
 github.com/hashicorp/terraform-plugin-sdk/helper/hashcode
 github.com/hashicorp/terraform-plugin-sdk/helper/schema
+github.com/hashicorp/terraform-plugin-sdk/helper/structure
+github.com/hashicorp/terraform-plugin-sdk/helper/validation
 github.com/hashicorp/terraform-plugin-sdk/httpclient
 github.com/hashicorp/terraform-plugin-sdk/internal/addrs
 github.com/hashicorp/terraform-plugin-sdk/internal/configs
@@ -185,7 +187,7 @@ github.com/hashicorp/terraform-svchost/auth
 github.com/hashicorp/terraform-svchost/disco
 # github.com/hashicorp/yamux v0.0.0-20181012175058-2f1d1f20f75d
 github.com/hashicorp/yamux
-# github.com/innovationnorway/go-databricks v0.0.0-20200310144818-5e772f6f42b4
+# github.com/innovationnorway/go-databricks v0.0.0-20200312110707-85292b3cb7c7
 github.com/innovationnorway/go-databricks/models
 github.com/innovationnorway/go-databricks/plumbing
 github.com/innovationnorway/go-databricks/plumbing/clusters

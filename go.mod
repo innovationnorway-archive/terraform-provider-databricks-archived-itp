@@ -7,6 +7,6 @@ require (
 	github.com/go-openapi/strfmt v0.19.5
 	github.com/hashicorp/go-cleanhttp v0.5.1
 	github.com/hashicorp/terraform v0.12.23
-	github.com/hashicorp/terraform-plugin-sdk v1.7.0
-	github.com/innovationnorway/go-databricks v0.0.0-20200310144818-5e772f6f42b4
+	github.com/hashicorp/terraform-plugin-sdk v1.8.0
+	github.com/innovationnorway/go-databricks v0.0.0-20200312110707-85292b3cb7c7
 )

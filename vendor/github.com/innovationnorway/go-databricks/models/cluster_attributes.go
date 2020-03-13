@@ -57,7 +57,7 @@ type ClusterAttributes struct {
 	NodeTypeID string `json:"node_type_id,omitempty"`
 
 	// num workers
-	NumWorkers int64 `json:"num_workers,omitempty"`
+	NumWorkers int32 `json:"num_workers,omitempty"`
 
 	// spark conf
 	SparkConf SparkConfPair `json:"spark_conf,omitempty"`

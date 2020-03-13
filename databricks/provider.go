@@ -26,7 +26,7 @@ func Provider() terraform.ResourceProvider {
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
-			//"databricks_cluster": resourceDatabricksCluster(),
+			"databricks_cluster": resourceDatabricksCluster(),
 		},
 
 		ConfigureFunc: providerConfigure,

@@ -9,7 +9,6 @@ import (
 	"github.com/go-openapi/errors"
 	strfmt "github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
-	"github.com/go-openapi/validate"
 )
 
 // Error error
@@ -17,18 +16,17 @@ import (
 type Error struct {
 
 	// error code
-	ErrorCode string `json:"error_code,omitempty"`
+	ErrorCode ErrorCode `json:"error_code,omitempty"`
 
 	// message
-	// Required: true
-	Message *string `json:"message"`
+	Message string `json:"message,omitempty"`
 }
 
 // Validate validates this error
 func (m *Error) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.validateMessage(formats); err != nil {
+	if err := m.validateErrorCode(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -38,9 +36,16 @@ func (m *Error) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *Error) validateMessage(formats strfmt.Registry) error {
+func (m *Error) validateErrorCode(formats strfmt.Registry) error {
 
-	if err := validate.Required("message", "body", m.Message); err != nil {
+	if swag.IsZero(m.ErrorCode) { // not required
+		return nil
+	}
+
+	if err := m.ErrorCode.Validate(formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("error_code")
+		}
 		return err
 	}
 
