@@ -1,25 +1,34 @@
 ---
-layout: "scaffolding"
-page_title: "Provider: Scaffolding"
-sidebar_current: "docs-scaffolding-index"
+layout: "databricks"
+page_title: "Provider: Databricks"
+sidebar_current: "docs-databricks-index"
 description: |-
-  Terraform provider scaffolding.
+  The Databricks provider is used to interact with Databricks services.
 ---
 
-# Scaffolding Provider
+# Databricks Provider
 
-Use this paragraph to give a high-level overview of your provider, and any configuration it requires.
+The Databricks provider is used to interact with [Databricks](https://databricks.com/) services.
 
 Use the navigation to the left to read about the available resources.
 
 ## Example Usage
 
 ```hcl
-provider "scaffolding" {
+provider "databricks" {
+  host  = var.databricks_host
+  token = var.databricks_token
 }
 
-# Example resource configuration
-resource "scaffolding_resource" "example" {
-  # ...
+data "databricks_cluster" "example" {
+  cluster_id = "0308-153622-deity853"
 }
 ```
+
+## Argument Reference
+
+The following arguments are supported in the `provider` block:
+
+* `host` - (Required) A Databricks host (should begin with `https://`). This is the URL of the Databricks instance. It can also be sourced from the `DATABRICKS_HOST` environment variable.
+
+* `token` - (Required) A [personal access token](https://docs.databricks.com/dev-tools/api/latest/authentication.html#authentication). This is used to access Databricks REST APIs. It can also be sourced from the `DATABRICKS_TOKEN` environment variable.
