@@ -38,7 +38,7 @@ func resourceDatabricksCluster() *schema.Resource {
 						},
 					},
 				},
-				ConflictsWith: []string{"num_workers"},
+				ExactlyOneOf: []string{"num_workers", "autoscale"},
 			},
 
 			"cluster_name": {
