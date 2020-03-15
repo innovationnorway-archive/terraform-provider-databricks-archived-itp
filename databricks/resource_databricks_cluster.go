@@ -209,7 +209,10 @@ func resourceDatabricksCluster() *schema.Resource {
 									},
 								},
 							},
-							ConflictsWith: []string{"cluster_log_conf.dbfs"},
+							ExactlyOneOf: []string{
+								"cluster_log_conf.0.dbfs",
+								"cluster_log_conf.0.s3",
+							},
 						},
 					},
 				},
@@ -276,7 +279,10 @@ func resourceDatabricksCluster() *schema.Resource {
 									},
 								},
 							},
-							ConflictsWith: []string{"init_scripts.dbfs"},
+							ExactlyOneOf: []string{
+								"init_scripts.0.dbfs",
+								"init_scripts.0.s3",
+							},
 						},
 					},
 				},
