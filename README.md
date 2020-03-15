@@ -37,8 +37,17 @@ provider "databricks" {
   token = var.databricks_token
 }
 
-data "databricks_cluster" "example" {
-  cluster_id = "0308-153622-deity853"
+resource "databricks_cluster" "example" {
+  cluster_name  = "example"
+  spark_version = "6.3.x-scala2.11"
+  node_type_id  = "Standard_DS3_v2"
+
+  autoscale {
+    min_workers = 2
+    max_workers = 8
+  }
+
+  autotermination_minutes = 120
 }
 ```
 
@@ -56,6 +65,12 @@ $ $GOPATH/bin/terraform-provider-databricks
 ...
 ```
 
+You can also cross-compile if necessary:
+
+```sh
+GOOS=windows GOARCH=amd64 make build
+```
+
 In order to test the provider, you can simply run `make test`.
 
 ```sh
@@ -69,3 +84,14 @@ In order to run the full suite of Acceptance tests, run `make testacc`.
 ```sh
 $ make testacc
 ```
+
+In order to run a subset of Acceptance tests, you can run:
+
+```sh
+make testacc TESTARGS='-run=TestAccDatabricksCluster'
+```
+
+The following environment variables must be set prior to running acceptance tests:
+
+- `DATABRICKS_HOST`
+- `DATABRICKS_TOKEN`
