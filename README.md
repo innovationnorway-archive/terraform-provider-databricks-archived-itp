@@ -37,15 +37,24 @@ provider "databricks" {
   token = var.databricks_token
 }
 
-data "databricks_cluster" "example" {
-  cluster_id = "0308-153622-deity853"
+resource "databricks_cluster" "example" {
+  cluster_name  = "example"
+  spark_version = "6.3.x-scala2.11"
+  node_type_id  = "Standard_DS3_v2"
+
+  autoscale {
+    min_workers = 2
+    max_workers = 8
+  }
+
+  autotermination_minutes = 120
 }
 ```
 
 Developing the Provider
 ---------------------------
 
-If you wish to work on the provider, you'll first need [Go](http://www.golang.org) installed on your machine (version 1.8+ is *required*). You'll also need to correctly setup a [GOPATH](http://golang.org/doc/code.html#GOPATH), as well as adding `$GOPATH/bin` to your `$PATH`.
+If you wish to work on the provider, you'll first need [Go](http://www.golang.org) installed on your machine (version 1.13+ is *required*). You'll also need to correctly setup a [GOPATH](http://golang.org/doc/code.html#GOPATH), as well as adding `$GOPATH/bin` to your `$PATH`.
 
 To compile the provider, run `make build`. This will build the provider and put the provider binary in the `$GOPATH/bin` directory.
 
@@ -54,6 +63,12 @@ $ make build
 ...
 $ $GOPATH/bin/terraform-provider-databricks
 ...
+```
+
+You can also cross-compile if necessary:
+
+```sh
+GOOS=windows GOARCH=amd64 make build
 ```
 
 In order to test the provider, you can simply run `make test`.
@@ -69,3 +84,14 @@ In order to run the full suite of Acceptance tests, run `make testacc`.
 ```sh
 $ make testacc
 ```
+
+In order to run a subset of Acceptance tests, you can run:
+
+```sh
+make testacc TESTARGS='-run=TestAccDatabricksCluster'
+```
+
+The following environment variables must be set prior to running acceptance tests:
+
+- `DATABRICKS_HOST`
+- `DATABRICKS_TOKEN`
