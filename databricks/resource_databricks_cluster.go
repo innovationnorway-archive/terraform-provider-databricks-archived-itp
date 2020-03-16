@@ -452,7 +452,7 @@ func resourceDatabricksClusterRead(d *schema.ResourceData, meta interface{}) err
 	m := meta.(*Meta)
 	resp, err := m.Databricks.Clusters.Get(params, m.AuthInfo)
 	if err != nil {
-		if v, ok := err.(*clusters.GetDefault); ok {
+		if v, ok := err.(*clusters.GetBadRequest); ok {
 			if v.Payload.ErrorCode == models.ErrorCodeINVALIDPARAMETERVALUE {
 				d.SetId("")
 				return nil

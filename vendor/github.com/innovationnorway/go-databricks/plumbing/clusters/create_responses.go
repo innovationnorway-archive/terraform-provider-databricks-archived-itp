@@ -31,8 +31,8 @@ func (o *CreateReader) ReadResponse(response runtime.ClientResponse, consumer ru
 			return nil, err
 		}
 		return result, nil
-	case 403:
-		result := NewCreateForbidden()
+	case 400:
+		result := NewCreateBadRequest()
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
 			return nil, err
 		}
@@ -82,31 +82,33 @@ func (o *CreateOK) readResponse(response runtime.ClientResponse, consumer runtim
 	return nil
 }
 
-// NewCreateForbidden creates a CreateForbidden with default headers values
-func NewCreateForbidden() *CreateForbidden {
-	return &CreateForbidden{}
+// NewCreateBadRequest creates a CreateBadRequest with default headers values
+func NewCreateBadRequest() *CreateBadRequest {
+	return &CreateBadRequest{}
 }
 
-/*CreateForbidden handles this case with default header values.
+/*CreateBadRequest handles this case with default header values.
 
-invalid access token
+Error
 */
-type CreateForbidden struct {
-	Payload string
+type CreateBadRequest struct {
+	Payload *models.Error
 }
 
-func (o *CreateForbidden) Error() string {
-	return fmt.Sprintf("[POST /clusters/create][%d] createForbidden  %+v", 403, o.Payload)
+func (o *CreateBadRequest) Error() string {
+	return fmt.Sprintf("[POST /clusters/create][%d] createBadRequest  %+v", 400, o.Payload)
 }
 
-func (o *CreateForbidden) GetPayload() string {
+func (o *CreateBadRequest) GetPayload() *models.Error {
 	return o.Payload
 }
 
-func (o *CreateForbidden) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+func (o *CreateBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	o.Payload = new(models.Error)
 
 	// response payload
-	if err := consumer.Consume(response.Body(), &o.Payload); err != nil && err != io.EOF {
+	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
 		return err
 	}
 
@@ -122,12 +124,12 @@ func NewCreateDefault(code int) *CreateDefault {
 
 /*CreateDefault handles this case with default header values.
 
-error
+Default
 */
 type CreateDefault struct {
 	_statusCode int
 
-	Payload *models.Error
+	Payload string
 }
 
 // Code gets the status code for the create default response
@@ -139,16 +141,14 @@ func (o *CreateDefault) Error() string {
 	return fmt.Sprintf("[POST /clusters/create][%d] create default  %+v", o._statusCode, o.Payload)
 }
 
-func (o *CreateDefault) GetPayload() *models.Error {
+func (o *CreateDefault) GetPayload() string {
 	return o.Payload
 }
 
 func (o *CreateDefault) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.Error)
-
 	// response payload
-	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
+	if err := consumer.Consume(response.Body(), &o.Payload); err != nil && err != io.EOF {
 		return err
 	}
 

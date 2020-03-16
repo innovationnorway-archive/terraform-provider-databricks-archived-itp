@@ -30,8 +30,8 @@ func (o *ListNodeTypesReader) ReadResponse(response runtime.ClientResponse, cons
 			return nil, err
 		}
 		return result, nil
-	case 403:
-		result := NewListNodeTypesForbidden()
+	case 400:
+		result := NewListNodeTypesBadRequest()
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
 			return nil, err
 		}
@@ -79,31 +79,33 @@ func (o *ListNodeTypesOK) readResponse(response runtime.ClientResponse, consumer
 	return nil
 }
 
-// NewListNodeTypesForbidden creates a ListNodeTypesForbidden with default headers values
-func NewListNodeTypesForbidden() *ListNodeTypesForbidden {
-	return &ListNodeTypesForbidden{}
+// NewListNodeTypesBadRequest creates a ListNodeTypesBadRequest with default headers values
+func NewListNodeTypesBadRequest() *ListNodeTypesBadRequest {
+	return &ListNodeTypesBadRequest{}
 }
 
-/*ListNodeTypesForbidden handles this case with default header values.
+/*ListNodeTypesBadRequest handles this case with default header values.
 
-invalid access token
+Error
 */
-type ListNodeTypesForbidden struct {
-	Payload string
+type ListNodeTypesBadRequest struct {
+	Payload *models.Error
 }
 
-func (o *ListNodeTypesForbidden) Error() string {
-	return fmt.Sprintf("[GET /clusters/list-node-types][%d] listNodeTypesForbidden  %+v", 403, o.Payload)
+func (o *ListNodeTypesBadRequest) Error() string {
+	return fmt.Sprintf("[GET /clusters/list-node-types][%d] listNodeTypesBadRequest  %+v", 400, o.Payload)
 }
 
-func (o *ListNodeTypesForbidden) GetPayload() string {
+func (o *ListNodeTypesBadRequest) GetPayload() *models.Error {
 	return o.Payload
 }
 
-func (o *ListNodeTypesForbidden) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+func (o *ListNodeTypesBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	o.Payload = new(models.Error)
 
 	// response payload
-	if err := consumer.Consume(response.Body(), &o.Payload); err != nil && err != io.EOF {
+	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
 		return err
 	}
 
@@ -119,12 +121,12 @@ func NewListNodeTypesDefault(code int) *ListNodeTypesDefault {
 
 /*ListNodeTypesDefault handles this case with default header values.
 
-error
+Default
 */
 type ListNodeTypesDefault struct {
 	_statusCode int
 
-	Payload *models.Error
+	Payload string
 }
 
 // Code gets the status code for the list node types default response
@@ -136,16 +138,14 @@ func (o *ListNodeTypesDefault) Error() string {
 	return fmt.Sprintf("[GET /clusters/list-node-types][%d] listNodeTypes default  %+v", o._statusCode, o.Payload)
 }
 
-func (o *ListNodeTypesDefault) GetPayload() *models.Error {
+func (o *ListNodeTypesDefault) GetPayload() string {
 	return o.Payload
 }
 
 func (o *ListNodeTypesDefault) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.Error)
-
 	// response payload
-	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
+	if err := consumer.Consume(response.Body(), &o.Payload); err != nil && err != io.EOF {
 		return err
 	}
 

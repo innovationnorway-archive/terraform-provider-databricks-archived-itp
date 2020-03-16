@@ -31,8 +31,8 @@ func (o *PermanentDeleteReader) ReadResponse(response runtime.ClientResponse, co
 			return nil, err
 		}
 		return result, nil
-	case 403:
-		result := NewPermanentDeleteForbidden()
+	case 400:
+		result := NewPermanentDeleteBadRequest()
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
 			return nil, err
 		}
@@ -70,31 +70,33 @@ func (o *PermanentDeleteOK) readResponse(response runtime.ClientResponse, consum
 	return nil
 }
 
-// NewPermanentDeleteForbidden creates a PermanentDeleteForbidden with default headers values
-func NewPermanentDeleteForbidden() *PermanentDeleteForbidden {
-	return &PermanentDeleteForbidden{}
+// NewPermanentDeleteBadRequest creates a PermanentDeleteBadRequest with default headers values
+func NewPermanentDeleteBadRequest() *PermanentDeleteBadRequest {
+	return &PermanentDeleteBadRequest{}
 }
 
-/*PermanentDeleteForbidden handles this case with default header values.
+/*PermanentDeleteBadRequest handles this case with default header values.
 
-invalid access token
+Error
 */
-type PermanentDeleteForbidden struct {
-	Payload string
+type PermanentDeleteBadRequest struct {
+	Payload *models.Error
 }
 
-func (o *PermanentDeleteForbidden) Error() string {
-	return fmt.Sprintf("[POST /clusters/permanent-delete][%d] permanentDeleteForbidden  %+v", 403, o.Payload)
+func (o *PermanentDeleteBadRequest) Error() string {
+	return fmt.Sprintf("[POST /clusters/permanent-delete][%d] permanentDeleteBadRequest  %+v", 400, o.Payload)
 }
 
-func (o *PermanentDeleteForbidden) GetPayload() string {
+func (o *PermanentDeleteBadRequest) GetPayload() *models.Error {
 	return o.Payload
 }
 
-func (o *PermanentDeleteForbidden) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+func (o *PermanentDeleteBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	o.Payload = new(models.Error)
 
 	// response payload
-	if err := consumer.Consume(response.Body(), &o.Payload); err != nil && err != io.EOF {
+	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
 		return err
 	}
 
@@ -110,12 +112,12 @@ func NewPermanentDeleteDefault(code int) *PermanentDeleteDefault {
 
 /*PermanentDeleteDefault handles this case with default header values.
 
-error
+Default
 */
 type PermanentDeleteDefault struct {
 	_statusCode int
 
-	Payload *models.Error
+	Payload string
 }
 
 // Code gets the status code for the permanent delete default response
@@ -127,16 +129,14 @@ func (o *PermanentDeleteDefault) Error() string {
 	return fmt.Sprintf("[POST /clusters/permanent-delete][%d] permanentDelete default  %+v", o._statusCode, o.Payload)
 }
 
-func (o *PermanentDeleteDefault) GetPayload() *models.Error {
+func (o *PermanentDeleteDefault) GetPayload() string {
 	return o.Payload
 }
 
 func (o *PermanentDeleteDefault) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.Error)
-
 	// response payload
-	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
+	if err := consumer.Consume(response.Body(), &o.Payload); err != nil && err != io.EOF {
 		return err
 	}
 

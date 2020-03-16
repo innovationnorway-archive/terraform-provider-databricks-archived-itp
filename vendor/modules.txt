@@ -219,7 +219,7 @@ github.com/hashicorp/terraform-svchost/auth
 github.com/hashicorp/terraform-svchost/disco
 # github.com/hashicorp/yamux v0.0.0-20181012175058-2f1d1f20f75d
 github.com/hashicorp/yamux
-# github.com/innovationnorway/go-databricks v0.0.0-20200312133037-6d2f423df805
+# github.com/innovationnorway/go-databricks v0.0.0-20200316110732-8eeac6b0a485
 github.com/innovationnorway/go-databricks/models
 github.com/innovationnorway/go-databricks/plumbing
 github.com/innovationnorway/go-databricks/plumbing/clusters
