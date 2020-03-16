@@ -33,8 +33,8 @@ func (o *EditReader) ReadResponse(response runtime.ClientResponse, consumer runt
 			return nil, err
 		}
 		return result, nil
-	case 403:
-		result := NewEditForbidden()
+	case 400:
+		result := NewEditBadRequest()
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
 			return nil, err
 		}
@@ -72,31 +72,33 @@ func (o *EditOK) readResponse(response runtime.ClientResponse, consumer runtime.
 	return nil
 }
 
-// NewEditForbidden creates a EditForbidden with default headers values
-func NewEditForbidden() *EditForbidden {
-	return &EditForbidden{}
+// NewEditBadRequest creates a EditBadRequest with default headers values
+func NewEditBadRequest() *EditBadRequest {
+	return &EditBadRequest{}
 }
 
-/*EditForbidden handles this case with default header values.
+/*EditBadRequest handles this case with default header values.
 
-invalid access token
+Error
 */
-type EditForbidden struct {
-	Payload string
+type EditBadRequest struct {
+	Payload *models.Error
 }
 
-func (o *EditForbidden) Error() string {
-	return fmt.Sprintf("[POST /clusters/edit][%d] editForbidden  %+v", 403, o.Payload)
+func (o *EditBadRequest) Error() string {
+	return fmt.Sprintf("[POST /clusters/edit][%d] editBadRequest  %+v", 400, o.Payload)
 }
 
-func (o *EditForbidden) GetPayload() string {
+func (o *EditBadRequest) GetPayload() *models.Error {
 	return o.Payload
 }
 
-func (o *EditForbidden) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+func (o *EditBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	o.Payload = new(models.Error)
 
 	// response payload
-	if err := consumer.Consume(response.Body(), &o.Payload); err != nil && err != io.EOF {
+	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
 		return err
 	}
 
@@ -112,12 +114,12 @@ func NewEditDefault(code int) *EditDefault {
 
 /*EditDefault handles this case with default header values.
 
-error
+Default
 */
 type EditDefault struct {
 	_statusCode int
 
-	Payload *models.Error
+	Payload string
 }
 
 // Code gets the status code for the edit default response
@@ -129,16 +131,14 @@ func (o *EditDefault) Error() string {
 	return fmt.Sprintf("[POST /clusters/edit][%d] edit default  %+v", o._statusCode, o.Payload)
 }
 
-func (o *EditDefault) GetPayload() *models.Error {
+func (o *EditDefault) GetPayload() string {
 	return o.Payload
 }
 
 func (o *EditDefault) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.Error)
-
 	// response payload
-	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
+	if err := consumer.Consume(response.Body(), &o.Payload); err != nil && err != io.EOF {
 		return err
 	}
 

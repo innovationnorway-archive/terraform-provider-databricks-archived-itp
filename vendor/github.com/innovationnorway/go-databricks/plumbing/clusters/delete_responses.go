@@ -31,8 +31,8 @@ func (o *DeleteReader) ReadResponse(response runtime.ClientResponse, consumer ru
 			return nil, err
 		}
 		return result, nil
-	case 403:
-		result := NewDeleteForbidden()
+	case 400:
+		result := NewDeleteBadRequest()
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
 			return nil, err
 		}
@@ -70,31 +70,33 @@ func (o *DeleteOK) readResponse(response runtime.ClientResponse, consumer runtim
 	return nil
 }
 
-// NewDeleteForbidden creates a DeleteForbidden with default headers values
-func NewDeleteForbidden() *DeleteForbidden {
-	return &DeleteForbidden{}
+// NewDeleteBadRequest creates a DeleteBadRequest with default headers values
+func NewDeleteBadRequest() *DeleteBadRequest {
+	return &DeleteBadRequest{}
 }
 
-/*DeleteForbidden handles this case with default header values.
+/*DeleteBadRequest handles this case with default header values.
 
-invalid access token
+Error
 */
-type DeleteForbidden struct {
-	Payload string
+type DeleteBadRequest struct {
+	Payload *models.Error
 }
 
-func (o *DeleteForbidden) Error() string {
-	return fmt.Sprintf("[POST /clusters/delete][%d] deleteForbidden  %+v", 403, o.Payload)
+func (o *DeleteBadRequest) Error() string {
+	return fmt.Sprintf("[POST /clusters/delete][%d] deleteBadRequest  %+v", 400, o.Payload)
 }
 
-func (o *DeleteForbidden) GetPayload() string {
+func (o *DeleteBadRequest) GetPayload() *models.Error {
 	return o.Payload
 }
 
-func (o *DeleteForbidden) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+func (o *DeleteBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	o.Payload = new(models.Error)
 
 	// response payload
-	if err := consumer.Consume(response.Body(), &o.Payload); err != nil && err != io.EOF {
+	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
 		return err
 	}
 
@@ -110,12 +112,12 @@ func NewDeleteDefault(code int) *DeleteDefault {
 
 /*DeleteDefault handles this case with default header values.
 
-error
+Default
 */
 type DeleteDefault struct {
 	_statusCode int
 
-	Payload *models.Error
+	Payload string
 }
 
 // Code gets the status code for the delete default response
@@ -127,16 +129,14 @@ func (o *DeleteDefault) Error() string {
 	return fmt.Sprintf("[POST /clusters/delete][%d] delete default  %+v", o._statusCode, o.Payload)
 }
 
-func (o *DeleteDefault) GetPayload() *models.Error {
+func (o *DeleteDefault) GetPayload() string {
 	return o.Payload
 }
 
 func (o *DeleteDefault) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.Error)
-
 	// response payload
-	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
+	if err := consumer.Consume(response.Body(), &o.Payload); err != nil && err != io.EOF {
 		return err
 	}
 

@@ -30,8 +30,8 @@ func (o *GetReader) ReadResponse(response runtime.ClientResponse, consumer runti
 			return nil, err
 		}
 		return result, nil
-	case 403:
-		result := NewGetForbidden()
+	case 400:
+		result := NewGetBadRequest()
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
 			return nil, err
 		}
@@ -81,31 +81,33 @@ func (o *GetOK) readResponse(response runtime.ClientResponse, consumer runtime.C
 	return nil
 }
 
-// NewGetForbidden creates a GetForbidden with default headers values
-func NewGetForbidden() *GetForbidden {
-	return &GetForbidden{}
+// NewGetBadRequest creates a GetBadRequest with default headers values
+func NewGetBadRequest() *GetBadRequest {
+	return &GetBadRequest{}
 }
 
-/*GetForbidden handles this case with default header values.
+/*GetBadRequest handles this case with default header values.
 
-invalid access token
+Error
 */
-type GetForbidden struct {
-	Payload string
+type GetBadRequest struct {
+	Payload *models.Error
 }
 
-func (o *GetForbidden) Error() string {
-	return fmt.Sprintf("[GET /clusters/get][%d] getForbidden  %+v", 403, o.Payload)
+func (o *GetBadRequest) Error() string {
+	return fmt.Sprintf("[GET /clusters/get][%d] getBadRequest  %+v", 400, o.Payload)
 }
 
-func (o *GetForbidden) GetPayload() string {
+func (o *GetBadRequest) GetPayload() *models.Error {
 	return o.Payload
 }
 
-func (o *GetForbidden) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+func (o *GetBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	o.Payload = new(models.Error)
 
 	// response payload
-	if err := consumer.Consume(response.Body(), &o.Payload); err != nil && err != io.EOF {
+	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
 		return err
 	}
 
@@ -121,12 +123,12 @@ func NewGetDefault(code int) *GetDefault {
 
 /*GetDefault handles this case with default header values.
 
-error
+Default
 */
 type GetDefault struct {
 	_statusCode int
 
-	Payload *models.Error
+	Payload string
 }
 
 // Code gets the status code for the get default response
@@ -138,16 +140,14 @@ func (o *GetDefault) Error() string {
 	return fmt.Sprintf("[GET /clusters/get][%d] get default  %+v", o._statusCode, o.Payload)
 }
 
-func (o *GetDefault) GetPayload() *models.Error {
+func (o *GetDefault) GetPayload() string {
 	return o.Payload
 }
 
 func (o *GetDefault) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.Error)
-
 	// response payload
-	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
+	if err := consumer.Consume(response.Body(), &o.Payload); err != nil && err != io.EOF {
 		return err
 	}
 

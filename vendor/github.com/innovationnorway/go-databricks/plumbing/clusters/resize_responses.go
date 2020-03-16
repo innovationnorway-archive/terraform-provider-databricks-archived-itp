@@ -32,8 +32,8 @@ func (o *ResizeReader) ReadResponse(response runtime.ClientResponse, consumer ru
 			return nil, err
 		}
 		return result, nil
-	case 403:
-		result := NewResizeForbidden()
+	case 400:
+		result := NewResizeBadRequest()
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
 			return nil, err
 		}
@@ -71,31 +71,33 @@ func (o *ResizeOK) readResponse(response runtime.ClientResponse, consumer runtim
 	return nil
 }
 
-// NewResizeForbidden creates a ResizeForbidden with default headers values
-func NewResizeForbidden() *ResizeForbidden {
-	return &ResizeForbidden{}
+// NewResizeBadRequest creates a ResizeBadRequest with default headers values
+func NewResizeBadRequest() *ResizeBadRequest {
+	return &ResizeBadRequest{}
 }
 
-/*ResizeForbidden handles this case with default header values.
+/*ResizeBadRequest handles this case with default header values.
 
-invalid access token
+Error
 */
-type ResizeForbidden struct {
-	Payload string
+type ResizeBadRequest struct {
+	Payload *models.Error
 }
 
-func (o *ResizeForbidden) Error() string {
-	return fmt.Sprintf("[POST /clusters/resize][%d] resizeForbidden  %+v", 403, o.Payload)
+func (o *ResizeBadRequest) Error() string {
+	return fmt.Sprintf("[POST /clusters/resize][%d] resizeBadRequest  %+v", 400, o.Payload)
 }
 
-func (o *ResizeForbidden) GetPayload() string {
+func (o *ResizeBadRequest) GetPayload() *models.Error {
 	return o.Payload
 }
 
-func (o *ResizeForbidden) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+func (o *ResizeBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	o.Payload = new(models.Error)
 
 	// response payload
-	if err := consumer.Consume(response.Body(), &o.Payload); err != nil && err != io.EOF {
+	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
 		return err
 	}
 
@@ -111,12 +113,12 @@ func NewResizeDefault(code int) *ResizeDefault {
 
 /*ResizeDefault handles this case with default header values.
 
-error
+Default
 */
 type ResizeDefault struct {
 	_statusCode int
 
-	Payload *models.Error
+	Payload string
 }
 
 // Code gets the status code for the resize default response
@@ -128,16 +130,14 @@ func (o *ResizeDefault) Error() string {
 	return fmt.Sprintf("[POST /clusters/resize][%d] resize default  %+v", o._statusCode, o.Payload)
 }
 
-func (o *ResizeDefault) GetPayload() *models.Error {
+func (o *ResizeDefault) GetPayload() string {
 	return o.Payload
 }
 
 func (o *ResizeDefault) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.Error)
-
 	// response payload
-	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
+	if err := consumer.Consume(response.Body(), &o.Payload); err != nil && err != io.EOF {
 		return err
 	}
 

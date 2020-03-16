@@ -31,8 +31,8 @@ func (o *RestartReader) ReadResponse(response runtime.ClientResponse, consumer r
 			return nil, err
 		}
 		return result, nil
-	case 403:
-		result := NewRestartForbidden()
+	case 400:
+		result := NewRestartBadRequest()
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
 			return nil, err
 		}
@@ -70,31 +70,33 @@ func (o *RestartOK) readResponse(response runtime.ClientResponse, consumer runti
 	return nil
 }
 
-// NewRestartForbidden creates a RestartForbidden with default headers values
-func NewRestartForbidden() *RestartForbidden {
-	return &RestartForbidden{}
+// NewRestartBadRequest creates a RestartBadRequest with default headers values
+func NewRestartBadRequest() *RestartBadRequest {
+	return &RestartBadRequest{}
 }
 
-/*RestartForbidden handles this case with default header values.
+/*RestartBadRequest handles this case with default header values.
 
-invalid access token
+Error
 */
-type RestartForbidden struct {
-	Payload string
+type RestartBadRequest struct {
+	Payload *models.Error
 }
 
-func (o *RestartForbidden) Error() string {
-	return fmt.Sprintf("[POST /clusters/restart][%d] restartForbidden  %+v", 403, o.Payload)
+func (o *RestartBadRequest) Error() string {
+	return fmt.Sprintf("[POST /clusters/restart][%d] restartBadRequest  %+v", 400, o.Payload)
 }
 
-func (o *RestartForbidden) GetPayload() string {
+func (o *RestartBadRequest) GetPayload() *models.Error {
 	return o.Payload
 }
 
-func (o *RestartForbidden) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+func (o *RestartBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	o.Payload = new(models.Error)
 
 	// response payload
-	if err := consumer.Consume(response.Body(), &o.Payload); err != nil && err != io.EOF {
+	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
 		return err
 	}
 
@@ -110,12 +112,12 @@ func NewRestartDefault(code int) *RestartDefault {
 
 /*RestartDefault handles this case with default header values.
 
-error
+Default
 */
 type RestartDefault struct {
 	_statusCode int
 
-	Payload *models.Error
+	Payload string
 }
 
 // Code gets the status code for the restart default response
@@ -127,16 +129,14 @@ func (o *RestartDefault) Error() string {
 	return fmt.Sprintf("[POST /clusters/restart][%d] restart default  %+v", o._statusCode, o.Payload)
 }
 
-func (o *RestartDefault) GetPayload() *models.Error {
+func (o *RestartDefault) GetPayload() string {
 	return o.Payload
 }
 
 func (o *RestartDefault) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.Error)
-
 	// response payload
-	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
+	if err := consumer.Consume(response.Body(), &o.Payload); err != nil && err != io.EOF {
 		return err
 	}
 
