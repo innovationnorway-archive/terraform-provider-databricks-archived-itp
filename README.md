@@ -1,6 +1,6 @@
 # Terraform Provider for Databricks
 
-[![Build Status](https://travis-ci.com/innovationnorway/terraform-provider-databricks.svg?branch=master)](https://travis-ci.com/innovationnorway/terraform-provider-databricks)
+![](https://github.com/innovationnorway/terraform-provider-databricks/workflows/test/badge.svg)
 
 ## Requirements
 
