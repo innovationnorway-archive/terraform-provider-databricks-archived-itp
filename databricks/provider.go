@@ -7,7 +7,7 @@ import (
 )
 
 func Provider() terraform.ResourceProvider {
-	return &schema.Provider{
+	p := &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"host": {
 				Type:        schema.TypeString,
@@ -79,22 +79,33 @@ func Provider() terraform.ResourceProvider {
 		ResourcesMap: map[string]*schema.Resource{
 			"databricks_cluster": resourceDatabricksCluster(),
 		},
-
-		ConfigureFunc: providerConfigure,
 	}
+
+	p.ConfigureFunc = providerConfigure(p)
+
+	return p
 }
 
-func providerConfigure(d *schema.ResourceData) (interface{}, error) {
-	config := Config{
-		Token: d.Get("token").(string),
-		Host:  d.Get("host").(string),
-	}
+func providerConfigure(p *schema.Provider) schema.ConfigureFunc {
+	return func(d *schema.ResourceData) (interface{}, error) {
+		config := Config{
+			Token: d.Get("token").(string),
+			Host:  d.Get("host").(string),
+		}
 
-	if v, ok := d.GetOk("azure"); ok {
-		config.Azure = expandAzureConfig(v.([]interface{}))
-	}
+		if v, ok := d.GetOk("azure"); ok {
+			config.Azure = expandAzureConfig(v.([]interface{}))
+		}
 
-	return config.Client()
+		client, err := config.Client()
+		if err != nil {
+			return nil, err
+		}
+
+		client.StopContext = p.StopContext()
+
+		return client, nil
+	}
 }
 
 func expandAzureConfig(input []interface{}) *AzureConfig {

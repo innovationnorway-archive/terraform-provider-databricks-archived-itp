@@ -1,19 +1,12 @@
 package databricks
 
 import (
+	"context"
 	"fmt"
 	"net/url"
 
-	"github.com/Azure/go-autorest/autorest/azure"
-	"github.com/Azure/go-autorest/autorest/azure/auth"
-	"github.com/Azure/go-autorest/autorest/azure/cli"
-	"github.com/go-openapi/runtime"
-	httptransport "github.com/go-openapi/runtime/client"
-	"github.com/go-openapi/strfmt"
-	cleanhttp "github.com/hashicorp/go-cleanhttp"
-	"github.com/hashicorp/terraform/helper/logging"
-	"github.com/innovationnorway/go-databricks/plumbing"
-	"github.com/innovationnorway/go-databricks/porcelain"
+	"github.com/innovationnorway/go-databricks/auth"
+	"github.com/innovationnorway/go-databricks/clusters"
 )
 
 type Config struct {
@@ -35,11 +28,11 @@ type AzureServicePrincipalConfig struct {
 }
 
 type Meta struct {
-	Databricks *plumbing.Databricks
-	AuthInfo   runtime.ClientAuthInfoWriter
+	Clusters    clusters.BaseClient
+	StopContext context.Context
 }
 
-func (c *Config) Client() (interface{}, error) {
+func (c *Config) Client() (*Meta, error) {
 	u, err := url.Parse(c.Host)
 	if err != nil {
 		return nil, fmt.Errorf("Error parsing host: %s", err)
@@ -50,60 +43,17 @@ func (c *Config) Client() (interface{}, error) {
 	}
 
 	if u.Path == "" {
-		u.Path = plumbing.DefaultBasePath
+		u.Path = clusters.DefaultBaseURI
 	}
 
-	transport := httptransport.New(u.Host, u.Path, []string{u.Scheme})
-	transport.Transport = logging.NewTransport("Databricks", cleanhttp.DefaultTransport())
-	transport.Transport = porcelain.NewUserAgentTransport(transport.Transport, "Terraform")
+	client := clusters.New()
+	client.BaseURI = u.String()
 
-	authInfo := httptransport.BearerToken(c.Token)
-
-	if c.Azure != nil {
-		authInfo, err = getAzureAuth(c.Azure)
-		if err != nil {
-			return nil, err
-		}
+	if c.Token != "" {
+		client.Authorizer = auth.NewTokenAuthorizer(c.Token)
 	}
 
 	return &Meta{
-		Databricks: plumbing.New(transport, strfmt.Default),
-		AuthInfo:   authInfo,
+		Clusters: client,
 	}, nil
-}
-
-func getAzureAuth(c *AzureConfig) (runtime.ClientAuthInfoWriter, error) {
-	var authInfo runtime.ClientAuthInfoWriter
-	if c.ServicePrincipal != nil && c.ServicePrincipal.ClientSecret != "" {
-		authConfig := auth.NewClientCredentialsConfig(
-			c.ServicePrincipal.ClientID,
-			c.ServicePrincipal.ClientSecret,
-			c.ServicePrincipal.TenantID)
-		managementToken, err := authConfig.ServicePrincipalToken()
-		if err != nil {
-			return nil, err
-		}
-
-		authConfig.Resource = porcelain.AzureDatabricksApplicationID
-		token, err := authConfig.ServicePrincipalToken()
-		if err != nil {
-			return nil, err
-		}
-
-		authInfo = porcelain.AzureAuth(token.OAuthToken(), managementToken.OAuthToken(), c.WorkspaceID)
-	} else {
-		managementToken, err := cli.GetTokenFromCLI(azure.PublicCloud.ResourceManagerEndpoint)
-		if err != nil {
-			return nil, err
-		}
-
-		token, err := cli.GetTokenFromCLI(porcelain.AzureDatabricksApplicationID)
-		if err != nil {
-			return nil, err
-		}
-
-		authInfo = porcelain.AzureAuth(token.AccessToken, managementToken.AccessToken, c.WorkspaceID)
-	}
-
-	return authInfo, nil
 }
