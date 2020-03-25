@@ -25,7 +25,7 @@ provider "databricks" {
 resource "databricks_cluster" "example" {
   cluster_name  = "example"
   spark_version = "6.3.x-scala2.11"
-  node_type_id  = "Standard_DS3_v22"
+  node_type_id  = "Standard_DS3_v2"
 
   autoscale {
     min_workers = 1

@@ -122,8 +122,7 @@ func expandAzureConfig(input []interface{}) *AzureConfig {
 	}
 
 	if v, ok := values["service_principal"]; ok {
-		servicePrincipal := expandAzureServicePrincipalConfig(v.([]interface{}))
-		config.ServicePrincipal = servicePrincipal
+		config.ServicePrincipal = expandAzureServicePrincipalConfig(v.([]interface{}))
 	}
 
 	return &config
@@ -138,7 +137,7 @@ func expandAzureServicePrincipalConfig(input []interface{}) *AzureServicePrincip
 
 	config := AzureServicePrincipalConfig{}
 
-	if v, ok := values["service_principal"]; ok {
+	if v, ok := values["client_id"]; ok {
 		config.ClientID = v.(string)
 	}
 
