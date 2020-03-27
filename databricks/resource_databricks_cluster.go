@@ -3,10 +3,10 @@ package databricks
 import (
 	"fmt"
 
+	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
-	"github.com/innovationnorway/go-databricks/models"
-	"github.com/innovationnorway/go-databricks/plumbing/clusters"
+	"github.com/innovationnorway/go-databricks/clusters"
 )
 
 func resourceDatabricksCluster() *schema.Resource {
@@ -76,9 +76,9 @@ func resourceDatabricksCluster() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							ValidateFunc: validation.StringInSlice([]string{
-								string(models.AwsAvailabilitySPOT),
-								string(models.AwsAvailabilityONDEMAND),
-								string(models.AwsAvailabilitySPOTWITHFALLBACK),
+								string(clusters.ONDEMAND),
+								string(clusters.SPOT),
+								string(clusters.SPOTWITHFALLBACK),
 							}, false),
 						},
 
@@ -101,8 +101,8 @@ func resourceDatabricksCluster() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							ValidateFunc: validation.StringInSlice([]string{
-								string(models.EbsVolumeTypeGENERALPURPOSESSD),
-								string(models.EbsVolumeTypeTHROUGHPUTOPTIMIZEDHDD),
+								string(clusters.GENERALPURPOSESSD),
+								string(clusters.THROUGHPUTOPTIMIZEDHDD),
 							}, false),
 						},
 
@@ -363,198 +363,201 @@ func resourceDatabricksCluster() *schema.Resource {
 }
 
 func resourceDatabricksClusterCreate(d *schema.ResourceData, meta interface{}) error {
-	params := clusters.NewCreateParams()
+	client := meta.(*Meta).Clusters
+	ctx := meta.(*Meta).StopContext
 
-	params.Body = &models.ClusterAttributes{
-		SparkVersion: d.Get("spark_version").(string),
-		NodeTypeID:   d.Get("node_type_id").(string),
+	sparkVersion := d.Get("spark_version").(string)
+	nodeTypeID := d.Get("node_type_id").(string)
+
+	attributes := clusters.Attributes{
+		SparkVersion: &sparkVersion,
+		NodeTypeID:   &nodeTypeID,
 	}
 
 	if v, ok := d.GetOk("num_workers"); ok {
-		params.Body.NumWorkers = int32(v.(int))
+		attributes.NumWorkers = to.Int32Ptr(v.(int32))
 	}
 
 	if v, ok := d.GetOk("autoscale"); ok {
-		params.Body.Autoscale = expandAutoscale(v.(*schema.Set).List())
+		attributes.Autoscale = expandAutoscale(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("cluster_name"); ok {
-		params.Body.ClusterName = v.(string)
+		attributes.ClusterName = to.StringPtr(v.(string))
 	}
 
 	if v, ok := d.GetOk("spark_conf"); ok {
-		params.Body.SparkConf = expandSparkConf(v.(map[string]interface{}))
+		attributes.SparkConf = expandSparkConf(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("aws_attributes"); ok {
-		params.Body.AwsAttributes = expandAwsAttributes(v.(*schema.Set).List())
+		attributes.AwsAttributes = expandAwsAttributes(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("driver_node_type_id"); ok {
-		params.Body.DriverNodeTypeID = v.(string)
+		attributes.DriverNodeTypeID = to.StringPtr(v.(string))
 	}
 
 	if v, ok := d.GetOk("ssh_public_keys"); ok {
-		params.Body.SSHPublicKeys = v.([]string)
+		attributes.SSHPublicKeys = to.StringSlicePtr(v.([]string))
 	}
 
 	if v, ok := d.GetOk("custom_tags"); ok {
-		params.Body.CustomTags = expandCustomTags(v.(map[string]interface{}))
+		attributes.CustomTags = expandCustomTags(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("cluster_log_conf"); ok {
-		params.Body.ClusterLogConf = expandClusterLogConf(v.(*schema.Set).List())
+		attributes.ClusterLogConf = expandClusterLogConf(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("init_scripts"); ok {
-		params.Body.InitScripts = expandInitScripts(v.(*schema.Set).List())
+		attributes.InitScripts = expandInitScripts(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("docker_image"); ok {
-		params.Body.DockerImage = expandDockerImage(v.(*schema.Set).List())
+		attributes.DockerImage = expandDockerImage(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("spark_env_vars"); ok {
-		params.Body.SparkEnvVars = expandSparkEnvVars(v.(map[string]interface{}))
+		attributes.SparkEnvVars = expandSparkEnvVars(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("autotermination_minutes"); ok {
-		params.Body.AutoterminationMinutes = int32(v.(int))
+		attributes.AutoterminationMinutes = to.Int32Ptr(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("enable_elastic_disk"); ok {
-		params.Body.EnableElasticDisk = v.(bool)
+		attributes.EnableElasticDisk = to.BoolPtr(v.(bool))
 	}
 
 	if v, ok := d.GetOk("instance_pool_id"); ok {
-		params.Body.InstancePoolID = v.(string)
+		attributes.InstancePoolID = to.StringPtr(v.(string))
 	}
 
 	if v, ok := d.GetOk("idempotency_token"); ok {
-		params.Body.IdempotencyToken = v.(string)
+		attributes.IdempotencyToken = to.StringPtr(v.(string))
 	}
 
-	m := meta.(*Meta)
-	resp, err := m.Databricks.Clusters.Create(params, m.AuthInfo)
+	resp, err := client.Create(ctx, attributes)
 	if err != nil {
 		return fmt.Errorf("unable to create cluster: %s", err)
 	}
 
-	d.SetId(resp.Payload.ClusterID)
+	d.SetId(*resp.ClusterID)
 
 	return resourceDatabricksClusterRead(d, meta)
 }
 
 func resourceDatabricksClusterRead(d *schema.ResourceData, meta interface{}) error {
-	params := clusters.NewGetParams()
-	params.ClusterID = d.Id()
+	client := meta.(*Meta).Clusters
+	ctx := meta.(*Meta).StopContext
 
-	m := meta.(*Meta)
-	resp, err := m.Databricks.Clusters.Get(params, m.AuthInfo)
+	resp, err := client.Get(ctx, d.Id())
 	if err != nil {
-		if v, ok := err.(*clusters.GetBadRequest); ok {
-			if v.Payload.ErrorCode == models.ErrorCodeINVALIDPARAMETERVALUE {
-				d.SetId("")
-				return nil
-			}
+		if resp.StatusCode == 400 {
+			d.SetId("")
+			return nil
 		}
-
 		return fmt.Errorf("unable to get cluster: %s", err)
 	}
 
-	d.Set("num_workers", resp.Payload.NumWorkers)
-	d.Set("autoscale", flattenAutoscale(resp.Payload.Autoscale))
-	d.Set("cluster_name", resp.Payload.ClusterName)
-	d.Set("spark_version", resp.Payload.SparkVersion)
-	d.Set("spark_conf", resp.Payload.SparkConf)
-	d.Set("aws_attributes", flattenAwsAttributes(resp.Payload.AwsAttributes))
-	d.Set("node_type_id", resp.Payload.NodeTypeID)
-	d.Set("driver_node_type_id", resp.Payload.DriverNodeTypeID)
-	d.Set("ssh_public_keys", resp.Payload.SSHPublicKeys)
-	d.Set("custom_tags", resp.Payload.CustomTags)
-	d.Set("cluster_log_conf", flattenClusterLogConf(resp.Payload.ClusterLogConf))
-	d.Set("init_scripts", flattenInitScripts(resp.Payload.InitScripts))
-	d.Set("docker_image", flattenDockerImage(resp.Payload.DockerImage))
-	d.Set("spark_env_vars", resp.Payload.SparkEnvVars)
-	d.Set("autotermination_minutes", resp.Payload.AutoterminationMinutes)
-	d.Set("enable_elastic_disk", resp.Payload.EnableElasticDisk)
-	d.Set("instance_pool_id", resp.Payload.InstancePoolID)
-	d.Set("cluster_id", resp.Payload.ClusterID)
+	d.Set("num_workers", resp.NumWorkers)
+	d.Set("autoscale", flattenAutoscale(resp.Autoscale))
+	d.Set("cluster_name", resp.ClusterName)
+	d.Set("spark_version", resp.SparkVersion)
+	d.Set("spark_conf", resp.SparkConf)
+	d.Set("aws_attributes", flattenAwsAttributes(resp.AwsAttributes))
+	d.Set("node_type_id", resp.NodeTypeID)
+	d.Set("driver_node_type_id", resp.DriverNodeTypeID)
+	d.Set("ssh_public_keys", resp.SSHPublicKeys)
+	d.Set("custom_tags", resp.CustomTags)
+	d.Set("cluster_log_conf", flattenClusterLogConf(resp.ClusterLogConf))
+	d.Set("init_scripts", flattenInitScripts(resp.InitScripts))
+	d.Set("docker_image", flattenDockerImage(resp.DockerImage))
+	d.Set("spark_env_vars", resp.SparkEnvVars)
+	d.Set("autotermination_minutes", resp.AutoterminationMinutes)
+	d.Set("enable_elastic_disk", resp.EnableElasticDisk)
+	d.Set("instance_pool_id", resp.InstancePoolID)
+	d.Set("cluster_id", resp.ClusterID)
 
 	return nil
 }
 
 func resourceDatabricksClusterUpdate(d *schema.ResourceData, meta interface{}) error {
-	params := clusters.NewEditParams()
+	client := meta.(*Meta).Clusters
+	ctx := meta.(*Meta).StopContext
 
-	params.Body = clusters.EditBody{
-		ClusterID:    d.Id(),
-		SparkVersion: d.Get("spark_version").(string),
-		NodeTypeID:   d.Get("node_type_id").(string),
+	clusterID := d.Id()
+	sparkVersion := d.Get("spark_version").(string)
+	nodeTypeID := d.Get("node_type_id").(string)
+
+	attributes := clusters.EditAttributes{
+		ClusterID:    &clusterID,
+		SparkVersion: &sparkVersion,
+		NodeTypeID:   &nodeTypeID,
 	}
 
 	if v, ok := d.GetOk("num_workers"); ok {
-		params.Body.NumWorkers = int32(v.(int))
+		attributes.NumWorkers = to.Int32Ptr(v.(int32))
 	}
 
 	if v, ok := d.GetOk("autoscale"); ok {
-		params.Body.Autoscale = expandAutoscale(v.(*schema.Set).List())
+		attributes.Autoscale = expandAutoscale(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("cluster_name"); ok {
-		params.Body.ClusterName = v.(string)
+		attributes.ClusterName = to.StringPtr(v.(string))
 	}
 
 	if v, ok := d.GetOk("spark_conf"); ok {
-		params.Body.SparkConf = expandSparkConf(v.(map[string]interface{}))
+		attributes.SparkConf = expandSparkConf(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("aws_attributes"); ok {
-		params.Body.AwsAttributes = expandAwsAttributes(v.(*schema.Set).List())
+		attributes.AwsAttributes = expandAwsAttributes(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("driver_node_type_id"); ok {
-		params.Body.DriverNodeTypeID = v.(string)
+		attributes.DriverNodeTypeID = to.StringPtr(v.(string))
 	}
 
 	if v, ok := d.GetOk("ssh_public_keys"); ok {
-		params.Body.SSHPublicKeys = v.([]string)
+		attributes.SSHPublicKeys = to.StringSlicePtr(v.([]string))
 	}
 
 	if v, ok := d.GetOk("custom_tags"); ok {
-		params.Body.CustomTags = expandCustomTags(v.(map[string]interface{}))
+		attributes.CustomTags = expandCustomTags(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("cluster_log_conf"); ok {
-		params.Body.ClusterLogConf = expandClusterLogConf(v.(*schema.Set).List())
+		attributes.ClusterLogConf = expandClusterLogConf(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("init_scripts"); ok {
-		params.Body.InitScripts = expandInitScripts(v.(*schema.Set).List())
+		attributes.InitScripts = expandInitScripts(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("docker_image"); ok {
-		params.Body.DockerImage = expandDockerImage(v.(*schema.Set).List())
+		attributes.DockerImage = expandDockerImage(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("spark_env_vars"); ok {
-		params.Body.SparkEnvVars = expandSparkEnvVars(v.(map[string]interface{}))
+		attributes.SparkEnvVars = expandSparkEnvVars(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("autotermination_minutes"); ok {
-		params.Body.AutoterminationMinutes = int32(v.(int))
+		attributes.AutoterminationMinutes = to.Int32Ptr(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("enable_elastic_disk"); ok {
-		params.Body.EnableElasticDisk = v.(bool)
+		attributes.EnableElasticDisk = to.BoolPtr(v.(bool))
 	}
 
 	if v, ok := d.GetOk("instance_pool_id"); ok {
-		params.Body.InstancePoolID = v.(string)
+		attributes.InstancePoolID = to.StringPtr(v.(string))
 	}
 
-	m := meta.(*Meta)
-	_, err := m.Databricks.Clusters.Edit(params, m.AuthInfo)
+	_, err := client.Edit(ctx, attributes)
 	if err != nil {
 		return fmt.Errorf("unable to update cluster: %s", err)
 	}
@@ -563,13 +566,16 @@ func resourceDatabricksClusterUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceDatabricksClusterDelete(d *schema.ResourceData, meta interface{}) error {
-	params := clusters.NewDeleteParams()
-	params.Body = clusters.DeleteBody{
-		ClusterID: d.Id(),
+	client := meta.(*Meta).Clusters
+	ctx := meta.(*Meta).StopContext
+
+	clusterID := d.Id()
+
+	attributes := clusters.DeleteAttributes{
+		ClusterID: &clusterID,
 	}
 
-	m := meta.(*Meta)
-	_, err := m.Databricks.Clusters.Delete(params, m.AuthInfo)
+	_, err := client.Delete(ctx, attributes)
 	if err != nil {
 		return fmt.Errorf("unable to delete cluster: %s", err)
 	}
@@ -579,95 +585,106 @@ func resourceDatabricksClusterDelete(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func expandAutoscale(input []interface{}) *models.AutoScale {
+func expandAutoscale(input []interface{}) *clusters.AutoScale {
 	if len(input) == 0 {
 		return nil
 	}
 
 	values := input[0].(map[string]interface{})
 
-	result := models.AutoScale{}
+	result := &clusters.AutoScale{}
 
-	result.MinWorkers = int32(values["min_workers"].(int))
-	result.MaxWorkers = int32(values["max_workers"].(int))
+	if v, ok := values["min_workers"]; ok {
+		result.MinWorkers = to.Int32Ptr(int32(v.(int)))
+	}
 
-	return &result
-}
-
-func expandSparkConf(input map[string]interface{}) models.SparkConfPair {
-	result := make(map[string]string, len(input))
-
-	for k, v := range input {
-		result[k] = v.(string)
+	if v, ok := values["max_workers"]; ok {
+		result.MaxWorkers = to.Int32Ptr(int32(v.(int)))
 	}
 
 	return result
 }
 
-func expandAwsAttributes(input []interface{}) *models.AwsAttributes {
+func expandSparkConf(input map[string]interface{}) map[string]*string {
+	result := make(map[string]*string, len(input))
+
+	for k, v := range input {
+		result[k] = to.StringPtr(v.(string))
+	}
+
+	return result
+}
+
+func expandAwsAttributes(input []interface{}) *clusters.AwsAttributes {
 	if len(input) == 0 {
 		return nil
 	}
 
 	values := input[0].(map[string]interface{})
 
-	result := models.AwsAttributes{}
+	result := clusters.AwsAttributes{}
 
 	if v, ok := values["first_on_demand"]; ok {
-		result.FirstOnDemand = int32(v.(int))
+		firstOnDemand := v.(int32)
+		result.FirstOnDemand = &firstOnDemand
 	}
 
 	if v, ok := values["availability"]; ok {
-		availability := models.AwsAvailability(v.(string))
+		availability := clusters.Availability(v.(string))
 		result.Availability = availability
 	}
 
 	if v, ok := values["zone_id"]; ok {
-		result.ZoneID = v.(string)
+		zoneID := v.(string)
+		result.ZoneID = &zoneID
 	}
 
 	if v, ok := values["instance_profile_arn"]; ok {
-		result.InstanceProfileArn = v.(string)
+		instanceProfileArn := v.(string)
+		result.InstanceProfileArn = &instanceProfileArn
 	}
 
 	if v, ok := values["spot_bid_price_percent"]; ok {
-		result.SpotBidPricePercent = int32(v.(int))
+		spotBidPricePercent := v.(int32)
+		result.SpotBidPricePercent = &spotBidPricePercent
 	}
 
 	if v, ok := values["availability"]; ok {
-		volumeType := models.EbsVolumeType(v.(string))
+		volumeType := clusters.EbsVolumeType(v.(string))
 		result.EbsVolumeType = volumeType
 	}
 
 	if v, ok := values["ebs_volume_count"]; ok {
-		result.EbsVolumeCount = int32(v.(int))
+		ebsVolumeCount := v.(int32)
+		result.EbsVolumeCount = &ebsVolumeCount
 	}
 
 	if v, ok := values["ebs_volume_size"]; ok {
-		result.EbsVolumeSize = int32(v.(int))
+		ebsVolumeSize := v.(int32)
+		result.EbsVolumeSize = &ebsVolumeSize
 	}
 
 	return &result
 }
 
-func expandCustomTags(input map[string]interface{}) models.ClusterTag {
-	result := make(map[string]string, len(input))
+func expandCustomTags(input map[string]interface{}) map[string]*string {
+	result := make(map[string]*string, len(input))
 
 	for k, v := range input {
-		result[k] = v.(string)
+		result[k] = v.(*string)
 	}
 
 	return result
 }
 
-func expandClusterLogConf(input []interface{}) *models.ClusterLogConf {
+func expandClusterLogConf(input []interface{}) *clusters.LogConf {
 	if len(input) == 0 {
 		return nil
 	}
 
 	values := input[0].(map[string]interface{})
 
-	result := models.ClusterLogConf{}
+	result := clusters.LogConf{}
 
 	if v, ok := values["dbfs"]; ok {
 		storageInfo := expandStorageInfoDbfs(v.([]interface{}))
@@ -682,16 +699,16 @@ func expandClusterLogConf(input []interface{}) *models.ClusterLogConf {
 	return &result
 }
 
-func expandInitScripts(input []interface{}) []*models.InitScriptInfo {
+func expandInitScripts(input []interface{}) *[]clusters.InitScriptInfo {
 	if len(input) == 0 {
 		return nil
 	}
 
-	results := make([]*models.InitScriptInfo, 0)
+	results := make([]clusters.InitScriptInfo, 0)
 
 	for _, item := range input {
 		values := item.(map[string]interface{})
-		result := models.InitScriptInfo{}
+		result := clusters.InitScriptInfo{}
 
 		if v, ok := values["dbfs"]; ok {
 			storageInfo := expandStorageInfoDbfs(v.([]interface{}))
@@ -703,74 +720,89 @@ func expandInitScripts(input []interface{}) []*models.InitScriptInfo {
 			result.S3 = storageInfo
 		}
 
-		results = append(results, &result)
+		results = append(results, result)
 	}
 
-	return results
+	return &results
 }
 
-func expandStorageInfoDbfs(input []interface{}) *models.DbfsStorageInfo {
+func expandStorageInfoDbfs(input []interface{}) *clusters.DbfsStorageInfo {
 	if len(input) == 0 {
 		return nil
 	}
 
 	values := input[0].(map[string]interface{})
 
-	result := models.DbfsStorageInfo{}
+	result := clusters.DbfsStorageInfo{}
 
-	result.Destination = values["destination"].(string)
+	if v, ok := values["destination"]; ok {
+		destination := v.(string)
+		result.Destination = &destination
+	}
 
 	return &result
 }
 
-func expandStorageInfoS3(input []interface{}) *models.S3StorageInfo {
+func expandStorageInfoS3(input []interface{}) *clusters.S3StorageInfo {
 	if len(input) == 0 {
 		return nil
 	}
 
 	values := input[0].(map[string]interface{})
 
-	result := models.S3StorageInfo{}
+	result := clusters.S3StorageInfo{}
 
-	result.Destination = values["destination"].(string)
+	if v, ok := values["destination"]; ok {
+		destination := v.(string)
+		result.Destination = &destination
+	}
 
 	if v, ok := values["region"]; ok {
-		result.Region = v.(string)
+		region := v.(string)
+		result.Region = &region
 	}
 
 	if v, ok := values["endpoint"]; ok {
-		result.Endpoint = v.(string)
+		endpoint := v.(string)
+		result.Endpoint = &endpoint
 	}
 
 	if v, ok := values["enable_encryption"]; ok {
-		result.EnableEncryption = v.(bool)
+		enableEncryption := v.(bool)
+		result.EnableEncryption = &enableEncryption
 	}
 
 	if v, ok := values["encryption_type"]; ok {
-		result.EncryptionType = v.(string)
+		encryptionType := v.(string)
+		result.EncryptionType = &encryptionType
 	}
 
 	if v, ok := values["kms_key"]; ok {
-		result.KmsKey = v.(string)
+		kmsKey := v.(string)
+		result.KmsKey = &kmsKey
 	}
 
 	if v, ok := values["canned_acl"]; ok {
-		result.CannedACL = v.(string)
+		cannedACL := v.(string)
+		result.CannedACL = &cannedACL
 	}
 
 	return &result
 }
 
-func expandDockerImage(input []interface{}) *models.DockerImage {
+func expandDockerImage(input []interface{}) *clusters.DockerImage {
 	if len(input) == 0 {
 		return nil
 	}
 
 	values := input[0].(map[string]interface{})
 
-	result := models.DockerImage{}
+	result := clusters.DockerImage{}
 
-	result.URL = values["url"].(string)
+	if v, ok := values["url"]; ok {
+		url := v.(string)
+		result.URL = &url
+	}
 
 	if v, ok := values["basic_auth"]; ok {
 		basicAuth := expandDockerBasicAuth(v.([]interface{}))
@@ -780,26 +812,33 @@ func expandDockerImage(input []interface{}) *models.DockerImage {
 	return &result
 }
 
-func expandDockerBasicAuth(input []interface{}) *models.DockerBasicAuth {
+func expandDockerBasicAuth(input []interface{}) *clusters.DockerBasicAuth {
 	if len(input) == 0 {
 		return nil
 	}
 
 	values := input[0].(map[string]interface{})
 
-	result := models.DockerBasicAuth{}
+	result := clusters.DockerBasicAuth{}
 
-	result.Username = values["username"].(string)
-	result.Password = values["password"].(string)
+	if v, ok := values["username"]; ok {
+		username := v.(string)
+		result.Username = &username
+	}
+
+	if v, ok := values["password"]; ok {
+		password := v.(string)
+		result.Password = &password
+	}
 
 	return &result
 }
 
-func expandSparkEnvVars(input map[string]interface{}) models.SparkEnvPair {
-	result := make(map[string]string, len(input))
+func expandSparkEnvVars(input map[string]interface{}) map[string]*string {
+	result := make(map[string]*string, len(input))
 
 	for k, v := range input {
-		result[k] = v.(string)
+		result[k] = v.(*string)
 	}
 
 	return result
