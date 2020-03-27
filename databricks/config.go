@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/url"
 
+	"github.com/Azure/go-autorest/autorest"
 	azureAuth "github.com/innovationnorway/go-azure/auth"
 	"github.com/innovationnorway/go-databricks/auth"
 	"github.com/innovationnorway/go-databricks/clusters"
@@ -36,7 +37,7 @@ type Meta struct {
 func (c *Config) Client() (*Meta, error) {
 	u, err := url.Parse(c.Host)
 	if err != nil {
-		return nil, fmt.Errorf("Error parsing host: %s", err)
+		return nil, fmt.Errorf("unable to parse URL: %s", err)
 	}
 
 	if u.Scheme == "" {
@@ -47,11 +48,28 @@ func (c *Config) Client() (*Meta, error) {
 		u.Path = clusters.DefaultBaseURI
 	}
 
-	client := clusters.New()
-	client.BaseURI = u.String()
+	authorizer, err := c.getAuthorizer()
+	if err != nil {
+		return nil, fmt.Errorf("unable to get auth: %s", err)
+	}
+
+	return c.configureClients(u.String(), authorizer)
+}
+
+func (c *Config) configureClients(baseURI string, authorizer autorest.Authorizer) (*Meta, error) {
+	meta := Meta{}
+
+	meta.Clusters = clusters.NewWithBaseURI(baseURI)
+	meta.Clusters.Authorizer = authorizer
+
+	return &meta, nil
+}
+
+func (c *Config) getAuthorizer() (autorest.Authorizer, error) {
+	var authorizer autorest.Authorizer
 
 	if c.Token != "" {
-		client.Authorizer = auth.NewTokenAuthorizer(c.Token)
+		authorizer = auth.NewTokenAuthorizer(c.Token)
 	}
 
 	if c.Azure != nil {
@@ -75,11 +93,11 @@ func (c *Config) Client() (*Meta, error) {
 			return nil, err
 		}
 
-		client.Authorizer = auth.NewAzureDatabricksAuthorizer(
-			token.OAuthToken(), managementToken.OAuthToken(), c.Azure.WorkspaceID)
+		authorizer = auth.NewAzureDatabricksAuthorizer(
+			token.OAuthToken(),
+			managementToken.OAuthToken(),
+			c.Azure.WorkspaceID)
 	}
 
-	return &Meta{
-		Clusters: client,
-	}, nil
+	return authorizer, nil
 }
