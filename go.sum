@@ -148,6 +148,8 @@ github.com/innovationnorway/go-azure v0.0.0-20200325011807-fc51476d2a64 h1:+wa3A
 github.com/innovationnorway/go-azure v0.0.0-20200325011807-fc51476d2a64/go.mod h1:2m5ahMFX0U5HrAYyCHgr4FMuEUAPkbYQc2b2eqhDAgc=
 github.com/innovationnorway/go-databricks v0.0.0-20200324021818-27bada674ad0 h1:injwEx3yE4BcfnJTRANMqux6SgxnNcUrjyX+VyWsMLg=
 github.com/innovationnorway/go-databricks v0.0.0-20200324021818-27bada674ad0/go.mod h1:QEGWP0EpIlkLC/nh20I7yFnhfzsTm4VEbmLsCA/DNzA=
+github.com/innovationnorway/go-databricks v0.0.0-20200327100530-e0b92c183d02 h1:5MkF2Qv0rUWXCHWbI8b1Fq5vUcqxQ4koumxrFpb+E7Y=
+github.com/innovationnorway/go-databricks v0.0.0-20200327100530-e0b92c183d02/go.mod h1:QEGWP0EpIlkLC/nh20I7yFnhfzsTm4VEbmLsCA/DNzA=
 github.com/jmespath/go-jmespath v0.0.0-20160202185014-0b12d6b521d8/go.mod h1:Nht3zPeWKUH0NzdCt2Blrr5ys8VGpn0CEB0cQHVjt7k=
 github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af h1:pmfjZENx5imkbgOkpRUYLnmbU7UEFbjtDA2hxJ1ichM=
 github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af/go.mod h1:Nht3zPeWKUH0NzdCt2Blrr5ys8VGpn0CEB0cQHVjt7k=
