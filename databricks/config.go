@@ -9,6 +9,7 @@ import (
 	azureAuth "github.com/innovationnorway/go-azure/auth"
 	"github.com/innovationnorway/go-databricks/auth"
 	"github.com/innovationnorway/go-databricks/clusters"
+	"github.com/innovationnorway/go-databricks/groups"
 )
 
 type Config struct {
@@ -31,6 +32,7 @@ type AzureServicePrincipalConfig struct {
 
 type Meta struct {
 	Clusters    clusters.BaseClient
+	Groups      groups.BaseClient
 	StopContext context.Context
 }
 
@@ -61,6 +63,9 @@ func (c *Config) configureClients(baseURI string, authorizer autorest.Authorizer
 
 	meta.Clusters = clusters.NewWithBaseURI(baseURI)
 	meta.Clusters.Authorizer = authorizer
+
+	meta.Groups = groups.NewWithBaseURI(baseURI)
+	meta.Groups.Authorizer = authorizer
 
 	return &meta, nil
 }
