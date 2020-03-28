@@ -93,6 +93,8 @@ func providerConfigure(p *schema.Provider) schema.ConfigureFunc {
 		config := Config{
 			Token: d.Get("token").(string),
 			Host:  d.Get("host").(string),
+
+			terraformVersion: p.TerraformVersion,
 		}
 
 		if v, ok := d.GetOk("azure"); ok {

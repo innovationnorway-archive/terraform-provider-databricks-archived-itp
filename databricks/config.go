@@ -6,16 +6,22 @@ import (
 	"net/url"
 
 	"github.com/Azure/go-autorest/autorest"
+	"github.com/hashicorp/terraform/httpclient"
 	azureAuth "github.com/innovationnorway/go-azure/auth"
 	"github.com/innovationnorway/go-databricks/auth"
 	"github.com/innovationnorway/go-databricks/clusters"
 	"github.com/innovationnorway/go-databricks/groups"
+	"github.com/innovationnorway/terraform-provider-databricks/version"
 )
+
+const TerraformProviderUserAgent = "terraform-provider-databricks"
 
 type Config struct {
 	Token string
 	Host  string
 	Azure *AzureConfig
+
+	terraformVersion string
 }
 
 type AzureConfig struct {
@@ -55,19 +61,24 @@ func (c *Config) Client() (*Meta, error) {
 		return nil, fmt.Errorf("unable to get auth: %s", err)
 	}
 
-	return c.configureClients(u.String(), authorizer)
+	return c.createClients(u.String(), authorizer)
 }
 
-func (c *Config) configureClients(baseURI string, authorizer autorest.Authorizer) (*Meta, error) {
+func (c *Config) createClients(baseURI string, authorizer autorest.Authorizer) (*Meta, error) {
 	meta := Meta{}
 
 	meta.Clusters = clusters.NewWithBaseURI(baseURI)
-	meta.Clusters.Authorizer = authorizer
+	configureClient(&meta.Clusters.Client, authorizer, c.terraformVersion)
 
 	meta.Groups = groups.NewWithBaseURI(baseURI)
-	meta.Groups.Authorizer = authorizer
+	configureClient(&meta.Groups.Client, authorizer, c.terraformVersion)
 
 	return &meta, nil
+}
+
+func configureClient(client *autorest.Client, authorizer autorest.Authorizer, tfVersion string) {
+	client.Authorizer = authorizer
+	client.UserAgent = getUserAgent(tfVersion)
 }
 
 func (c *Config) getAuthorizer() (autorest.Authorizer, error) {
@@ -105,4 +116,10 @@ func (c *Config) getAuthorizer() (autorest.Authorizer, error) {
 	}
 
 	return authorizer, nil
+}
+
+func getUserAgent(terraformVersion string) string {
+	terraformUserAgent := httpclient.TerraformUserAgent(terraformVersion)
+	providerUserAgent := fmt.Sprintf("%s/%s", TerraformProviderUserAgent, version.ProviderVersion)
+	return fmt.Sprintf("%s %s", terraformUserAgent, providerUserAgent)
 }
