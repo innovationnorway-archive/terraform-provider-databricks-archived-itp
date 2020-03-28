@@ -14,6 +14,8 @@ import (
 	"github.com/innovationnorway/terraform-provider-databricks/version"
 )
 
+const TerraformProviderUserAgent = "terraform-provider-databricks"
+
 type Config struct {
 	Token string
 	Host  string
@@ -118,6 +120,6 @@ func (c *Config) getAuthorizer() (autorest.Authorizer, error) {
 
 func getUserAgent(terraformVersion string) string {
 	terraformUserAgent := httpclient.TerraformUserAgent(terraformVersion)
-	providerUserAgent := fmt.Sprintf("terraform-provider-databricks/%s", version.ProviderVersion)
+	providerUserAgent := fmt.Sprintf("%s/%s", TerraformProviderUserAgent, version.ProviderVersion)
 	return fmt.Sprintf("%s %s", terraformUserAgent, providerUserAgent)
 }
