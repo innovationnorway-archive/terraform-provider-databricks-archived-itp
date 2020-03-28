@@ -73,7 +73,8 @@ func Provider() terraform.ResourceProvider {
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{
-			"databricks_cluster": dataSourceDatabricksCluster(),
+			"databricks_cluster":       dataSourceDatabricksCluster(),
+			"databricks_group_members": dataSourceDatabricksGroupMembers(),
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
