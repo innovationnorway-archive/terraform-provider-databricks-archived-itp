@@ -8,5 +8,5 @@ require (
 	github.com/hashicorp/terraform v0.12.24
 	github.com/hashicorp/terraform-plugin-sdk v1.9.0
 	github.com/innovationnorway/go-azure v0.0.0-20200325011807-fc51476d2a64
-	github.com/innovationnorway/go-databricks v0.0.0-20200328024113-d821ba199e7b
+	github.com/innovationnorway/go-databricks v0.0.0-20200328180111-adb4c208a09e
 )
