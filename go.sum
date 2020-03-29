@@ -229,6 +229,10 @@ github.com/innovationnorway/go-databricks v0.0.0-20200328024113-d821ba199e7b h1:
 github.com/innovationnorway/go-databricks v0.0.0-20200328024113-d821ba199e7b/go.mod h1:QEGWP0EpIlkLC/nh20I7yFnhfzsTm4VEbmLsCA/DNzA=
 github.com/innovationnorway/go-databricks v0.0.0-20200328180111-adb4c208a09e h1:M5vUEi2Gy+GpGtByLpJtHy6e5JDHSO9Yt6Ejn0q1kZ4=
 github.com/innovationnorway/go-databricks v0.0.0-20200328180111-adb4c208a09e/go.mod h1:QEGWP0EpIlkLC/nh20I7yFnhfzsTm4VEbmLsCA/DNzA=
+github.com/innovationnorway/go-databricks v0.0.0-20200328230446-0081c0f3ec94 h1:kyXbaeDJBHsXx9TrHvpib4s8Ej2P4l5E56WMiBHtPG0=
+github.com/innovationnorway/go-databricks v0.0.0-20200328230446-0081c0f3ec94/go.mod h1:QEGWP0EpIlkLC/nh20I7yFnhfzsTm4VEbmLsCA/DNzA=
+github.com/innovationnorway/go-databricks v0.0.0-20200329124108-6d45a234715b h1:ZJayicP67epc5S0Mtg98DMj8eQP+FCJA+tfffSoJGS0=
+github.com/innovationnorway/go-databricks v0.0.0-20200329124108-6d45a234715b/go.mod h1:QEGWP0EpIlkLC/nh20I7yFnhfzsTm4VEbmLsCA/DNzA=
 github.com/jmespath/go-jmespath v0.0.0-20160202185014-0b12d6b521d8/go.mod h1:Nht3zPeWKUH0NzdCt2Blrr5ys8VGpn0CEB0cQHVjt7k=
 github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af h1:pmfjZENx5imkbgOkpRUYLnmbU7UEFbjtDA2hxJ1ichM=
 github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af/go.mod h1:Nht3zPeWKUH0NzdCt2Blrr5ys8VGpn0CEB0cQHVjt7k=
