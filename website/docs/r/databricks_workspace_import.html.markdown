@@ -24,7 +24,7 @@ resource "databricks_workspace_import" "example" {
 
 The following arguments are supported:
 
-* `path` - (Required) The absolute path of the notebook or directory.
+* `path` - (Required) The absolute path of the notebook.
 
 * `content` - (Required) The base64-encoded content. This has a limit of 10 MB.
 
