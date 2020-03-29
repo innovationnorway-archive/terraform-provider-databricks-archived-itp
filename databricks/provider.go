@@ -78,9 +78,10 @@ func Provider() terraform.ResourceProvider {
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
-			"databricks_cluster":      resourceDatabricksCluster(),
-			"databricks_group":        resourceDatabricksGroup(),
-			"databricks_group_member": resourceDatabricksGroupMember(),
+			"databricks_cluster":          resourceDatabricksCluster(),
+			"databricks_group":            resourceDatabricksGroup(),
+			"databricks_group_member":     resourceDatabricksGroupMember(),
+			"databricks_workspace_import": resourceDatabricksWorkspaceImport(),
 		},
 	}
 
@@ -94,6 +95,8 @@ func providerConfigure(p *schema.Provider) schema.ConfigureFunc {
 		config := Config{
 			Token: d.Get("token").(string),
 			Host:  d.Get("host").(string),
+
+			terraformVersion: p.TerraformVersion,
 		}
 
 		if v, ok := d.GetOk("azure"); ok {
