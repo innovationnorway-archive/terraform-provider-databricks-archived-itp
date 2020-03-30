@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/innovationnorway/go-databricks/clusters"
 )
 
@@ -13,8 +14,9 @@ func dataSourceDatabricksCluster() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"cluster_id": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringIsNotEmpty,
 			},
 
 			"num_workers": {
@@ -528,24 +530,24 @@ func dataSourceDatabricksClusterRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	d.Set("num_workers", resp.NumWorkers)
-	d.Set("autoscale", flattenAutoscale(resp.Autoscale))
+	d.Set("autoscale", flattenClusterAutoscale(resp.Autoscale))
 	d.Set("cluster_id", resp.ClusterID)
 	d.Set("creator_user_name", resp.CreatorUserName)
-	d.Set("driver", flattenDriver(resp.Driver))
-	d.Set("executors", flattenExecutors(resp.Executors))
+	d.Set("driver", flattenClusterDriver(resp.Driver))
+	d.Set("executors", flattenClusterExecutors(resp.Executors))
 	d.Set("spark_context_id", resp.SparkContextID)
 	d.Set("jdbc_port", resp.JdbcPort)
 	d.Set("cluster_name", resp.ClusterName)
 	d.Set("spark_version", resp.SparkVersion)
 	d.Set("spark_conf", resp.SparkConf)
-	d.Set("aws_attributes", flattenAwsAttributes(resp.AwsAttributes))
+	d.Set("aws_attributes", flattenClusterAwsAttributes(resp.AwsAttributes))
 	d.Set("node_type_id", resp.NodeTypeID)
 	d.Set("driver_node_type_id", resp.DriverNodeTypeID)
 	d.Set("ssh_public_keys", resp.SSHPublicKeys)
 	d.Set("custom_tags", resp.CustomTags)
 	d.Set("cluster_log_conf", flattenClusterLogConf(resp.ClusterLogConf))
-	d.Set("init_scripts", flattenInitScripts(resp.InitScripts))
-	d.Set("docker_image", flattenDockerImage(resp.DockerImage))
+	d.Set("init_scripts", flattenClusterInitScripts(resp.InitScripts))
+	d.Set("docker_image", flattenClusterDockerImage(resp.DockerImage))
 	d.Set("spark_env_vars", resp.SparkEnvVars)
 	d.Set("autotermination_minutes", resp.AutoterminationMinutes)
 	d.Set("enable_elastic_disk", resp.EnableElasticDisk)
@@ -561,14 +563,14 @@ func dataSourceDatabricksClusterRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("cluster_cores", resp.ClusterCores)
 	d.Set("default_tags", resp.DefaultTags)
 	d.Set("cluster_log_status", flattenClusterLogStatus(resp.ClusterLogStatus))
-	d.Set("termination_reason", flattenTerminationReason(resp.TerminationReason))
+	d.Set("termination_reason", flattenClusterTerminationReason(resp.TerminationReason))
 
 	d.SetId(*resp.ClusterID)
 
 	return nil
 }
 
-func flattenAutoscale(input *clusters.AutoScale) []interface{} {
+func flattenClusterAutoscale(input *clusters.AutoScale) []interface{} {
 	if input == nil {
 		return []interface{}{}
 	}
@@ -581,7 +583,7 @@ func flattenAutoscale(input *clusters.AutoScale) []interface{} {
 	return []interface{}{values}
 }
 
-func flattenExecutors(input *[]clusters.SparkNode) []interface{} {
+func flattenClusterExecutors(input *[]clusters.SparkNode) []interface{} {
 	result := make([]interface{}, 0)
 
 	if input == nil {
@@ -596,7 +598,7 @@ func flattenExecutors(input *[]clusters.SparkNode) []interface{} {
 		values["node_id"] = executor.NodeID
 		values["instance_id"] = executor.InstanceID
 		values["start_timestamp"] = executor.StartTimestamp
-		values["node_aws_attributes"] = flattenNodeAwsAttributes(executor.NodeAwsAttributes)
+		values["node_aws_attributes"] = flattenClusterNodeAwsAttributes(executor.NodeAwsAttributes)
 		values["host_private_ip"] = executor.HostPrivateIP
 
 		result = append(result, values)
@@ -605,7 +607,7 @@ func flattenExecutors(input *[]clusters.SparkNode) []interface{} {
 	return result
 }
 
-func flattenDriver(input *clusters.SparkNode) []interface{} {
+func flattenClusterDriver(input *clusters.SparkNode) []interface{} {
 	if input == nil {
 		return []interface{}{}
 	}
@@ -617,13 +619,13 @@ func flattenDriver(input *clusters.SparkNode) []interface{} {
 	values["node_id"] = input.NodeID
 	values["instance_id"] = input.InstanceID
 	values["start_timestamp"] = input.StartTimestamp
-	values["node_aws_attributes"] = flattenNodeAwsAttributes(input.NodeAwsAttributes)
+	values["node_aws_attributes"] = flattenClusterNodeAwsAttributes(input.NodeAwsAttributes)
 	values["host_private_ip"] = input.HostPrivateIP
 
 	return []interface{}{values}
 }
 
-func flattenNodeAwsAttributes(input *clusters.SparkNodeAwsAttributes) []interface{} {
+func flattenClusterNodeAwsAttributes(input *clusters.SparkNodeAwsAttributes) []interface{} {
 	if input == nil {
 		return []interface{}{}
 	}
@@ -635,7 +637,7 @@ func flattenNodeAwsAttributes(input *clusters.SparkNodeAwsAttributes) []interfac
 	return []interface{}{values}
 }
 
-func flattenAwsAttributes(input *clusters.AwsAttributes) []interface{} {
+func flattenClusterAwsAttributes(input *clusters.AwsAttributes) []interface{} {
 	if input == nil {
 		return []interface{}{}
 	}
@@ -660,13 +662,13 @@ func flattenClusterLogConf(input *clusters.LogConf) []interface{} {
 
 	values := make(map[string]interface{})
 
-	values["dbfs"] = flattenStorageInfoDbfs(input.Dbfs)
-	values["s3"] = flattenStorageInfoS3(input.S3)
+	values["dbfs"] = flattenClusterStorageInfoDbfs(input.Dbfs)
+	values["s3"] = flattenClusterStorageInfoS3(input.S3)
 
 	return []interface{}{values}
 }
 
-func flattenInitScripts(input *[]clusters.InitScriptInfo) []interface{} {
+func flattenClusterInitScripts(input *[]clusters.InitScriptInfo) []interface{} {
 	result := make([]interface{}, 0)
 
 	if input == nil {
@@ -676,8 +678,8 @@ func flattenInitScripts(input *[]clusters.InitScriptInfo) []interface{} {
 	for _, item := range *input {
 		values := make(map[string]interface{})
 
-		values["dbfs"] = flattenStorageInfoDbfs(item.Dbfs)
-		values["s3"] = flattenStorageInfoS3(item.S3)
+		values["dbfs"] = flattenClusterStorageInfoDbfs(item.Dbfs)
+		values["s3"] = flattenClusterStorageInfoS3(item.S3)
 
 		result = append(result, values)
 	}
@@ -685,7 +687,7 @@ func flattenInitScripts(input *[]clusters.InitScriptInfo) []interface{} {
 	return result
 }
 
-func flattenStorageInfoDbfs(input *clusters.DbfsStorageInfo) []interface{} {
+func flattenClusterStorageInfoDbfs(input *clusters.DbfsStorageInfo) []interface{} {
 	if input == nil {
 		return []interface{}{}
 	}
@@ -697,7 +699,7 @@ func flattenStorageInfoDbfs(input *clusters.DbfsStorageInfo) []interface{} {
 	return []interface{}{values}
 }
 
-func flattenStorageInfoS3(input *clusters.S3StorageInfo) []interface{} {
+func flattenClusterStorageInfoS3(input *clusters.S3StorageInfo) []interface{} {
 	if input == nil {
 		return []interface{}{}
 	}
@@ -715,7 +717,7 @@ func flattenStorageInfoS3(input *clusters.S3StorageInfo) []interface{} {
 	return []interface{}{values}
 }
 
-func flattenDockerImage(input *clusters.DockerImage) []interface{} {
+func flattenClusterDockerImage(input *clusters.DockerImage) []interface{} {
 	if input == nil {
 		return []interface{}{}
 	}
@@ -723,12 +725,12 @@ func flattenDockerImage(input *clusters.DockerImage) []interface{} {
 	values := make(map[string]interface{})
 
 	values["url"] = input.URL
-	values["basic_auth"] = flattenDockerBasicAuth(input.BasicAuth)
+	values["basic_auth"] = flattenClusterDockerBasicAuth(input.BasicAuth)
 
 	return []interface{}{values}
 }
 
-func flattenDockerBasicAuth(input *clusters.DockerBasicAuth) []interface{} {
+func flattenClusterDockerBasicAuth(input *clusters.DockerBasicAuth) []interface{} {
 	if input == nil {
 		return []interface{}{}
 	}
@@ -754,7 +756,7 @@ func flattenClusterLogStatus(input *clusters.LogSyncStatus) []interface{} {
 	return []interface{}{values}
 }
 
-func flattenTerminationReason(input *clusters.TerminationReason) []interface{} {
+func flattenClusterTerminationReason(input *clusters.TerminationReason) []interface{} {
 	if input == nil {
 		return []interface{}{}
 	}
