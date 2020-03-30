@@ -7,6 +7,12 @@ on:
       - master
 
 jobs:
+  golangci-lint:
+    runs-on: ubuntu-latest
+    container: golangci/golangci-lint:v1.24
+    steps:
+    - run: golangci-lint run ./...
+
   test:
     runs-on: ubuntu-latest
     steps:
