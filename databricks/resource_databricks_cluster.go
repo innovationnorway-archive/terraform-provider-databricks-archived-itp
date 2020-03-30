@@ -23,7 +23,7 @@ func resourceDatabricksCluster() *schema.Resource {
 			},
 
 			"autoscale": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
@@ -62,7 +62,7 @@ func resourceDatabricksCluster() *schema.Resource {
 			},
 
 			"aws_attributes": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
@@ -148,13 +148,13 @@ func resourceDatabricksCluster() *schema.Resource {
 			},
 
 			"cluster_log_conf": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"dbfs": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
@@ -168,7 +168,7 @@ func resourceDatabricksCluster() *schema.Resource {
 						},
 
 						"s3": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
@@ -224,7 +224,7 @@ func resourceDatabricksCluster() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"dbfs": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
@@ -238,7 +238,7 @@ func resourceDatabricksCluster() *schema.Resource {
 						},
 
 						"s3": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
@@ -289,7 +289,7 @@ func resourceDatabricksCluster() *schema.Resource {
 			},
 
 			"docker_image": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
@@ -300,7 +300,7 @@ func resourceDatabricksCluster() *schema.Resource {
 						},
 
 						"basic_auth": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
