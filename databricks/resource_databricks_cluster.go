@@ -225,7 +225,7 @@ func resourceDatabricksCluster() *schema.Resource {
 			},
 
 			"init_scripts": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -386,7 +386,7 @@ func resourceDatabricksClusterCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if v, ok := d.GetOk("autoscale"); ok {
-		attributes.Autoscale = expandClusterAutoscale(v.(*schema.Set).List())
+		attributes.Autoscale = expandClusterAutoscale(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("cluster_name"); ok {
@@ -398,7 +398,7 @@ func resourceDatabricksClusterCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if v, ok := d.GetOk("aws_attributes"); ok {
-		attributes.AwsAttributes = expandClusterAwsAttributes(v.(*schema.Set).List())
+		attributes.AwsAttributes = expandClusterAwsAttributes(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("driver_node_type_id"); ok {
@@ -414,15 +414,15 @@ func resourceDatabricksClusterCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if v, ok := d.GetOk("cluster_log_conf"); ok {
-		attributes.ClusterLogConf = expandClusterLogConf(v.(*schema.Set).List())
+		attributes.ClusterLogConf = expandClusterLogConf(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("init_scripts"); ok {
-		attributes.InitScripts = expandClusterInitScripts(v.(*schema.Set).List())
+		attributes.InitScripts = expandClusterInitScripts(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("docker_image"); ok {
-		attributes.DockerImage = expandClusterDockerImage(v.(*schema.Set).List())
+		attributes.DockerImage = expandClusterDockerImage(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("spark_env_vars"); ok {
@@ -509,7 +509,7 @@ func resourceDatabricksClusterUpdate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if v, ok := d.GetOk("autoscale"); ok {
-		attributes.Autoscale = expandClusterAutoscale(v.(*schema.Set).List())
+		attributes.Autoscale = expandClusterAutoscale(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("cluster_name"); ok {
@@ -521,7 +521,7 @@ func resourceDatabricksClusterUpdate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if v, ok := d.GetOk("aws_attributes"); ok {
-		attributes.AwsAttributes = expandClusterAwsAttributes(v.(*schema.Set).List())
+		attributes.AwsAttributes = expandClusterAwsAttributes(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("driver_node_type_id"); ok {
@@ -537,15 +537,15 @@ func resourceDatabricksClusterUpdate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if v, ok := d.GetOk("cluster_log_conf"); ok {
-		attributes.ClusterLogConf = expandClusterLogConf(v.(*schema.Set).List())
+		attributes.ClusterLogConf = expandClusterLogConf(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("init_scripts"); ok {
-		attributes.InitScripts = expandClusterInitScripts(v.(*schema.Set).List())
+		attributes.InitScripts = expandClusterInitScripts(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("docker_image"); ok {
-		attributes.DockerImage = expandClusterDockerImage(v.(*schema.Set).List())
+		attributes.DockerImage = expandClusterDockerImage(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("spark_env_vars"); ok {
