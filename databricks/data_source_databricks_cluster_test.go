@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
-func TestAccDataSourceDatabricksCluster(t *testing.T) {
+func TestAccDataSourceDatabricksCluster_basic(t *testing.T) {
 	resourceName := "data.databricks_cluster.test"
 	clusterName := acctest.RandString(6)
 
@@ -17,7 +17,7 @@ func TestAccDataSourceDatabricksCluster(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceDatabricksCluster(clusterName),
+				Config: testAccDataSourceDatabricksClusterBasic(clusterName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "cluster_name", clusterName),
 					resource.TestCheckResourceAttr(resourceName, "spark_version", "6.3.x-scala2.11"),
@@ -29,7 +29,7 @@ func TestAccDataSourceDatabricksCluster(t *testing.T) {
 	})
 }
 
-func testAccDataSourceDatabricksCluster(clusterName string) string {
+func testAccDataSourceDatabricksClusterBasic(clusterName string) string {
 	return fmt.Sprintf(`
 resource "databricks_cluster" "test" {
   cluster_name  = "%s"

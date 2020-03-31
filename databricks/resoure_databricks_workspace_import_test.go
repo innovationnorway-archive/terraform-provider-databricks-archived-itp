@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccDatabricksWorkspaceImport(t *testing.T) {
+func TestAccDatabricksWorkspaceImport_basic(t *testing.T) {
 	resourceName := "databricks_workspace_import.test"
 	path := fmt.Sprintf("/Shared/%s", acctest.RandString(6))
 
@@ -19,7 +19,7 @@ func TestAccDatabricksWorkspaceImport(t *testing.T) {
 		CheckDestroy: testAccCheckDatabricksWorkspaceImportDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDatabricksWorkspaceImport(path),
+				Config: testAccDatabricksWorkspaceImportBasic(path),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "path", path),
 				),
@@ -50,7 +50,7 @@ func testAccCheckDatabricksWorkspaceImportDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccDatabricksWorkspaceImport(path string) string {
+func testAccDatabricksWorkspaceImportBasic(path string) string {
 	return fmt.Sprintf(`
 resource "databricks_workspace_import" "test" {
   path     = "%s"
