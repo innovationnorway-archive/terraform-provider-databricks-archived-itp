@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccDatabricksCluster_basic(t *testing.T) {
@@ -13,8 +14,9 @@ func TestAccDatabricksCluster_basic(t *testing.T) {
 	clusterName := acctest.RandString(6)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckDatabricksClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDatabricksClusterBasic(clusterName),
@@ -27,6 +29,28 @@ func TestAccDatabricksCluster_basic(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccCheckDatabricksClusterDestroy(s *terraform.State) error {
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "databricks_cluster" {
+			continue
+		}
+
+		client := testAccProvider.Meta().(*Meta).Clusters
+		ctx := testAccProvider.Meta().(*Meta).StopContext
+		resp, err := client.Get(ctx, rs.Primary.ID)
+		if err != nil {
+			if resp.IsHTTPStatus(400) && isDatabricksClusterNotExistsError(err) {
+				return nil
+			}
+			return err
+		}
+
+		return fmt.Errorf("Databricks cluster still exists:\n%#v", resp)
+	}
+
+	return nil
 }
 
 func testAccDatabricksClusterBasic(clusterName string) string {

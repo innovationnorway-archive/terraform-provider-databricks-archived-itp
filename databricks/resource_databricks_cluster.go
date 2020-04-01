@@ -3,10 +3,12 @@ package databricks
 import (
 	"fmt"
 
+	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/innovationnorway/go-databricks/clusters"
+	"github.com/innovationnorway/go-databricks/databricks"
 )
 
 func resourceDatabricksCluster() *schema.Resource {
@@ -461,7 +463,7 @@ func resourceDatabricksClusterRead(d *schema.ResourceData, meta interface{}) err
 
 	resp, err := client.Get(ctx, d.Id())
 	if err != nil {
-		if resp.StatusCode == 400 {
+		if resp.IsHTTPStatus(400) && isDatabricksClusterNotExistsError(err) {
 			d.SetId("")
 			return nil
 		}
@@ -578,11 +580,11 @@ func resourceDatabricksClusterDelete(d *schema.ResourceData, meta interface{}) e
 
 	clusterID := d.Id()
 
-	attributes := clusters.DeleteAttributes{
+	attributes := clusters.PermanentDeleteAttributes{
 		ClusterID: &clusterID,
 	}
 
-	_, err := client.Delete(ctx, attributes)
+	_, err := client.PermanentDelete(ctx, attributes)
 	if err != nil {
 		return fmt.Errorf("unable to delete cluster: %s", err)
 	}
@@ -849,4 +851,17 @@ func expandClusterSparkEnvVars(input map[string]interface{}) map[string]*string 
 	}
 
 	return result
+}
+
+func isDatabricksClusterNotExistsError(err error) bool {
+	if de, ok := err.(autorest.DetailedError); ok {
+		oe := de.Original
+		if e, ok := oe.(*databricks.Error); ok {
+			if clusters.ErrorCode(e.ErrorCode) == clusters.ErrorCode(clusters.ErrorCodeINVALIDPARAMETERVALUE) {
+				return true
+			}
+		}
+	}
+
+	return false
 }
