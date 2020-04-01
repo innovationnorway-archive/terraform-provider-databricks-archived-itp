@@ -10,6 +10,7 @@ import (
 	azureAuth "github.com/innovationnorway/go-azure/auth"
 	"github.com/innovationnorway/go-databricks/auth"
 	"github.com/innovationnorway/go-databricks/clusters"
+	"github.com/innovationnorway/go-databricks/databricks"
 	"github.com/innovationnorway/go-databricks/groups"
 	"github.com/innovationnorway/go-databricks/workspace"
 	"github.com/innovationnorway/terraform-provider-databricks/version"
@@ -55,7 +56,7 @@ func (c *Config) Client() (*Meta, error) {
 	}
 
 	if u.Path == "" {
-		u.Path = clusters.DefaultBaseURI
+		u.Path = databricks.DefaultBaseURI
 	}
 
 	authorizer, err := c.getAuthorizer()
@@ -84,6 +85,7 @@ func (c *Config) createClients(baseURI string, authorizer autorest.Authorizer) (
 func configureClient(client *autorest.Client, authorizer autorest.Authorizer, tfVersion string) {
 	client.Authorizer = authorizer
 	client.UserAgent = getUserAgent(tfVersion)
+	client.ResponseInspector = databricks.WithError()
 }
 
 func (c *Config) getAuthorizer() (autorest.Authorizer, error) {

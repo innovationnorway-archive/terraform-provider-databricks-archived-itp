@@ -75,12 +75,12 @@ func resourceDatabricksGroupMemberRead(d *schema.ResourceData, meta interface{})
 	client := meta.(*Meta).Groups
 	ctx := meta.(*Meta).StopContext
 
-	username := d.Get("user_name").(string)
-	groupName := d.Get("group_name").(string)
+	parentName := d.Get("parent_name").(string)
+	principalName := getPrincipalName(d)
 
-	resp, err := client.ListParents(ctx, groupName, username)
+	resp, err := client.ListMembers(ctx, parentName)
 	if err != nil {
-		if resp.IsHTTPStatus(404) {
+		if resp.IsHTTPStatus(404) || !isPrincipalMemberOf(principalName, resp.Members) {
 			d.SetId("")
 			return nil
 		}
@@ -124,4 +124,40 @@ func getDatabricksGroupMemberID(parentName, userName, groupName string) string {
 	}
 
 	return fmt.Sprintf("group:%s:%s", parentName, groupName)
+}
+
+func getPrincipalName(d *schema.ResourceData) groups.PrincipalName {
+	principalName := groups.PrincipalName{}
+
+	if v, ok := d.GetOk("user_name"); ok {
+		principalName.UserName = to.StringPtr(v.(string))
+	}
+
+	if v, ok := d.GetOk("group_name"); ok {
+		principalName.GroupName = to.StringPtr(v.(string))
+	}
+
+	return principalName
+}
+
+func isPrincipalMemberOf(principalName groups.PrincipalName, members *[]groups.PrincipalName) bool {
+	if members == nil {
+		return false
+	}
+
+	if principalName.GroupName == nil && principalName.UserName == nil {
+		return false
+	}
+
+	for _, member := range *members {
+		if *principalName.GroupName == *member.GroupName {
+			return true
+		}
+
+		if *principalName.UserName == *member.UserName {
+			return true
+		}
+	}
+
+	return false
 }

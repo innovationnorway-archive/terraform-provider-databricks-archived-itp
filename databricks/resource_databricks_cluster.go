@@ -3,10 +3,12 @@ package databricks
 import (
 	"fmt"
 
+	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/innovationnorway/go-databricks/clusters"
+	"github.com/innovationnorway/go-databricks/databricks"
 )
 
 func resourceDatabricksCluster() *schema.Resource {
@@ -18,38 +20,48 @@ func resourceDatabricksCluster() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"num_workers": {
-				Type:     schema.TypeInt,
-				Optional: true,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntBetween(1, 100000),
 			},
 
 			"autoscale": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"min_workers": {
-							Type:     schema.TypeInt,
-							Required: true,
+							Type:         schema.TypeInt,
+							Required:     true,
+							ValidateFunc: validation.IntBetween(1, 100000),
 						},
 						"max_workers": {
-							Type:     schema.TypeInt,
-							Required: true,
+							Type:         schema.TypeInt,
+							Required:     true,
+							ValidateFunc: validation.IntBetween(1, 100000),
 						},
 					},
 				},
 				ExactlyOneOf: []string{"num_workers", "autoscale"},
 			},
 
+			"spark_version": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringIsNotEmpty,
+			},
+
+			"node_type_id": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringIsNotEmpty,
+			},
+
 			"cluster_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
-			},
-
-			"spark_version": {
-				Type:     schema.TypeString,
-				Required: true,
 			},
 
 			"spark_conf": {
@@ -62,7 +74,7 @@ func resourceDatabricksCluster() *schema.Resource {
 			},
 
 			"aws_attributes": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
@@ -119,15 +131,11 @@ func resourceDatabricksCluster() *schema.Resource {
 				},
 			},
 
-			"node_type_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-
 			"driver_node_type_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringIsNotEmpty,
 			},
 
 			"ssh_public_keys": {
@@ -148,13 +156,13 @@ func resourceDatabricksCluster() *schema.Resource {
 			},
 
 			"cluster_log_conf": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"dbfs": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
@@ -168,7 +176,7 @@ func resourceDatabricksCluster() *schema.Resource {
 						},
 
 						"s3": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
@@ -219,12 +227,12 @@ func resourceDatabricksCluster() *schema.Resource {
 			},
 
 			"init_scripts": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"dbfs": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
@@ -238,7 +246,7 @@ func resourceDatabricksCluster() *schema.Resource {
 						},
 
 						"s3": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
@@ -289,7 +297,7 @@ func resourceDatabricksCluster() *schema.Resource {
 			},
 
 			"docker_image": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
@@ -300,7 +308,7 @@ func resourceDatabricksCluster() *schema.Resource {
 						},
 
 						"basic_auth": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
@@ -332,9 +340,10 @@ func resourceDatabricksCluster() *schema.Resource {
 			},
 
 			"autotermination_minutes": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntBetween(0, 10000),
 			},
 
 			"enable_elastic_disk": {
@@ -379,7 +388,7 @@ func resourceDatabricksClusterCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if v, ok := d.GetOk("autoscale"); ok {
-		attributes.Autoscale = expandAutoscale(v.(*schema.Set).List())
+		attributes.Autoscale = expandClusterAutoscale(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("cluster_name"); ok {
@@ -387,11 +396,11 @@ func resourceDatabricksClusterCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if v, ok := d.GetOk("spark_conf"); ok {
-		attributes.SparkConf = expandSparkConf(v.(map[string]interface{}))
+		attributes.SparkConf = expandClusterSparkConf(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("aws_attributes"); ok {
-		attributes.AwsAttributes = expandAwsAttributes(v.(*schema.Set).List())
+		attributes.AwsAttributes = expandClusterAwsAttributes(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("driver_node_type_id"); ok {
@@ -403,23 +412,23 @@ func resourceDatabricksClusterCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if v, ok := d.GetOk("custom_tags"); ok {
-		attributes.CustomTags = expandCustomTags(v.(map[string]interface{}))
+		attributes.CustomTags = expandClusterCustomTags(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("cluster_log_conf"); ok {
-		attributes.ClusterLogConf = expandClusterLogConf(v.(*schema.Set).List())
+		attributes.ClusterLogConf = expandClusterLogConf(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("init_scripts"); ok {
-		attributes.InitScripts = expandInitScripts(v.(*schema.Set).List())
+		attributes.InitScripts = expandClusterInitScripts(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("docker_image"); ok {
-		attributes.DockerImage = expandDockerImage(v.(*schema.Set).List())
+		attributes.DockerImage = expandClusterDockerImage(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("spark_env_vars"); ok {
-		attributes.SparkEnvVars = expandSparkEnvVars(v.(map[string]interface{}))
+		attributes.SparkEnvVars = expandClusterSparkEnvVars(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("autotermination_minutes"); ok {
@@ -454,7 +463,7 @@ func resourceDatabricksClusterRead(d *schema.ResourceData, meta interface{}) err
 
 	resp, err := client.Get(ctx, d.Id())
 	if err != nil {
-		if resp.StatusCode == 400 {
+		if resp.IsHTTPStatus(400) && isDatabricksClusterNotExistsError(err) {
 			d.SetId("")
 			return nil
 		}
@@ -462,18 +471,18 @@ func resourceDatabricksClusterRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	d.Set("num_workers", resp.NumWorkers)
-	d.Set("autoscale", flattenAutoscale(resp.Autoscale))
+	d.Set("autoscale", flattenClusterAutoscale(resp.Autoscale))
 	d.Set("cluster_name", resp.ClusterName)
 	d.Set("spark_version", resp.SparkVersion)
 	d.Set("spark_conf", resp.SparkConf)
-	d.Set("aws_attributes", flattenAwsAttributes(resp.AwsAttributes))
+	d.Set("aws_attributes", flattenClusterAwsAttributes(resp.AwsAttributes))
 	d.Set("node_type_id", resp.NodeTypeID)
 	d.Set("driver_node_type_id", resp.DriverNodeTypeID)
 	d.Set("ssh_public_keys", resp.SSHPublicKeys)
 	d.Set("custom_tags", resp.CustomTags)
 	d.Set("cluster_log_conf", flattenClusterLogConf(resp.ClusterLogConf))
-	d.Set("init_scripts", flattenInitScripts(resp.InitScripts))
-	d.Set("docker_image", flattenDockerImage(resp.DockerImage))
+	d.Set("init_scripts", flattenClusterInitScripts(resp.InitScripts))
+	d.Set("docker_image", flattenClusterDockerImage(resp.DockerImage))
 	d.Set("spark_env_vars", resp.SparkEnvVars)
 	d.Set("autotermination_minutes", resp.AutoterminationMinutes)
 	d.Set("enable_elastic_disk", resp.EnableElasticDisk)
@@ -502,7 +511,7 @@ func resourceDatabricksClusterUpdate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if v, ok := d.GetOk("autoscale"); ok {
-		attributes.Autoscale = expandAutoscale(v.(*schema.Set).List())
+		attributes.Autoscale = expandClusterAutoscale(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("cluster_name"); ok {
@@ -510,11 +519,11 @@ func resourceDatabricksClusterUpdate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if v, ok := d.GetOk("spark_conf"); ok {
-		attributes.SparkConf = expandSparkConf(v.(map[string]interface{}))
+		attributes.SparkConf = expandClusterSparkConf(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("aws_attributes"); ok {
-		attributes.AwsAttributes = expandAwsAttributes(v.(*schema.Set).List())
+		attributes.AwsAttributes = expandClusterAwsAttributes(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("driver_node_type_id"); ok {
@@ -526,23 +535,23 @@ func resourceDatabricksClusterUpdate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if v, ok := d.GetOk("custom_tags"); ok {
-		attributes.CustomTags = expandCustomTags(v.(map[string]interface{}))
+		attributes.CustomTags = expandClusterCustomTags(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("cluster_log_conf"); ok {
-		attributes.ClusterLogConf = expandClusterLogConf(v.(*schema.Set).List())
+		attributes.ClusterLogConf = expandClusterLogConf(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("init_scripts"); ok {
-		attributes.InitScripts = expandInitScripts(v.(*schema.Set).List())
+		attributes.InitScripts = expandClusterInitScripts(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("docker_image"); ok {
-		attributes.DockerImage = expandDockerImage(v.(*schema.Set).List())
+		attributes.DockerImage = expandClusterDockerImage(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("spark_env_vars"); ok {
-		attributes.SparkEnvVars = expandSparkEnvVars(v.(map[string]interface{}))
+		attributes.SparkEnvVars = expandClusterSparkEnvVars(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("autotermination_minutes"); ok {
@@ -571,11 +580,11 @@ func resourceDatabricksClusterDelete(d *schema.ResourceData, meta interface{}) e
 
 	clusterID := d.Id()
 
-	attributes := clusters.DeleteAttributes{
+	attributes := clusters.PermanentDeleteAttributes{
 		ClusterID: &clusterID,
 	}
 
-	_, err := client.Delete(ctx, attributes)
+	_, err := client.PermanentDelete(ctx, attributes)
 	if err != nil {
 		return fmt.Errorf("unable to delete cluster: %s", err)
 	}
@@ -585,7 +594,7 @@ func resourceDatabricksClusterDelete(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func expandAutoscale(input []interface{}) *clusters.AutoScale {
+func expandClusterAutoscale(input []interface{}) *clusters.AutoScale {
 	if len(input) == 0 {
 		return nil
 	}
@@ -605,7 +614,7 @@ func expandAutoscale(input []interface{}) *clusters.AutoScale {
 	return result
 }
 
-func expandSparkConf(input map[string]interface{}) map[string]*string {
+func expandClusterSparkConf(input map[string]interface{}) map[string]*string {
 	result := make(map[string]*string, len(input))
 
 	for k, v := range input {
@@ -615,7 +624,7 @@ func expandSparkConf(input map[string]interface{}) map[string]*string {
 	return result
 }
 
-func expandAwsAttributes(input []interface{}) *clusters.AwsAttributes {
+func expandClusterAwsAttributes(input []interface{}) *clusters.AwsAttributes {
 	if len(input) == 0 {
 		return nil
 	}
@@ -667,7 +676,7 @@ func expandAwsAttributes(input []interface{}) *clusters.AwsAttributes {
 	return &result
 }
 
-func expandCustomTags(input map[string]interface{}) map[string]*string {
+func expandClusterCustomTags(input map[string]interface{}) map[string]*string {
 	result := make(map[string]*string, len(input))
 
 	for k, v := range input {
@@ -687,19 +696,19 @@ func expandClusterLogConf(input []interface{}) *clusters.LogConf {
 	result := clusters.LogConf{}
 
 	if v, ok := values["dbfs"]; ok {
-		storageInfo := expandStorageInfoDbfs(v.([]interface{}))
+		storageInfo := expandClusterStorageInfoDbfs(v.([]interface{}))
 		result.Dbfs = storageInfo
 	}
 
 	if v, ok := values["s3"]; ok {
-		storageInfo := expandStorageInfoS3(v.([]interface{}))
+		storageInfo := expandClusterStorageInfoS3(v.([]interface{}))
 		result.S3 = storageInfo
 	}
 
 	return &result
 }
 
-func expandInitScripts(input []interface{}) *[]clusters.InitScriptInfo {
+func expandClusterInitScripts(input []interface{}) *[]clusters.InitScriptInfo {
 	if len(input) == 0 {
 		return nil
 	}
@@ -711,12 +720,12 @@ func expandInitScripts(input []interface{}) *[]clusters.InitScriptInfo {
 		result := clusters.InitScriptInfo{}
 
 		if v, ok := values["dbfs"]; ok {
-			storageInfo := expandStorageInfoDbfs(v.([]interface{}))
+			storageInfo := expandClusterStorageInfoDbfs(v.([]interface{}))
 			result.Dbfs = storageInfo
 		}
 
 		if v, ok := values["s3"]; ok {
-			storageInfo := expandStorageInfoS3(v.([]interface{}))
+			storageInfo := expandClusterStorageInfoS3(v.([]interface{}))
 			result.S3 = storageInfo
 		}
 
@@ -726,7 +735,7 @@ func expandInitScripts(input []interface{}) *[]clusters.InitScriptInfo {
 	return &results
 }
 
-func expandStorageInfoDbfs(input []interface{}) *clusters.DbfsStorageInfo {
+func expandClusterStorageInfoDbfs(input []interface{}) *clusters.DbfsStorageInfo {
 	if len(input) == 0 {
 		return nil
 	}
@@ -743,7 +752,7 @@ func expandStorageInfoDbfs(input []interface{}) *clusters.DbfsStorageInfo {
 	return &result
 }
 
-func expandStorageInfoS3(input []interface{}) *clusters.S3StorageInfo {
+func expandClusterStorageInfoS3(input []interface{}) *clusters.S3StorageInfo {
 	if len(input) == 0 {
 		return nil
 	}
@@ -790,7 +799,7 @@ func expandStorageInfoS3(input []interface{}) *clusters.S3StorageInfo {
 	return &result
 }
 
-func expandDockerImage(input []interface{}) *clusters.DockerImage {
+func expandClusterDockerImage(input []interface{}) *clusters.DockerImage {
 	if len(input) == 0 {
 		return nil
 	}
@@ -805,14 +814,14 @@ func expandDockerImage(input []interface{}) *clusters.DockerImage {
 	}
 
 	if v, ok := values["basic_auth"]; ok {
-		basicAuth := expandDockerBasicAuth(v.([]interface{}))
+		basicAuth := expandClusterDockerBasicAuth(v.([]interface{}))
 		result.BasicAuth = basicAuth
 	}
 
 	return &result
 }
 
-func expandDockerBasicAuth(input []interface{}) *clusters.DockerBasicAuth {
+func expandClusterDockerBasicAuth(input []interface{}) *clusters.DockerBasicAuth {
 	if len(input) == 0 {
 		return nil
 	}
@@ -834,7 +843,7 @@ func expandDockerBasicAuth(input []interface{}) *clusters.DockerBasicAuth {
 	return &result
 }
 
-func expandSparkEnvVars(input map[string]interface{}) map[string]*string {
+func expandClusterSparkEnvVars(input map[string]interface{}) map[string]*string {
 	result := make(map[string]*string, len(input))
 
 	for k, v := range input {
@@ -842,4 +851,17 @@ func expandSparkEnvVars(input map[string]interface{}) map[string]*string {
 	}
 
 	return result
+}
+
+func isDatabricksClusterNotExistsError(err error) bool {
+	if de, ok := err.(autorest.DetailedError); ok {
+		oe := de.Original
+		if e, ok := oe.(*databricks.Error); ok {
+			if clusters.ErrorCode(e.ErrorCode) == clusters.ErrorCodeINVALIDPARAMETERVALUE {
+				return true
+			}
+		}
+	}
+
+	return false
 }

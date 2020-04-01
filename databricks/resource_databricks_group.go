@@ -3,8 +3,8 @@ package databricks
 import (
 	"fmt"
 
-	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/innovationnorway/go-databricks/groups"
 )
 
@@ -16,9 +16,10 @@ func resourceDatabricksGroup() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringIsNotEmpty,
 			},
 		},
 	}
@@ -83,29 +84,4 @@ func resourceDatabricksGroupDelete(d *schema.ResourceData, meta interface{}) err
 	d.SetId("")
 
 	return nil
-}
-
-func expandGroupMembers(input []interface{}) *[]groups.PrincipalName {
-	if len(input) == 0 {
-		return nil
-	}
-
-	results := make([]groups.PrincipalName, 0)
-
-	for _, item := range input {
-		values := item.(map[string]interface{})
-		result := groups.PrincipalName{}
-
-		if v, ok := values["user_name"]; ok {
-			result.UserName = to.StringPtr(v.(string))
-		}
-
-		if v, ok := values["group_name"]; ok {
-			result.GroupName = to.StringPtr(v.(string))
-		}
-
-		results = append(results, result)
-	}
-
-	return &results
 }
