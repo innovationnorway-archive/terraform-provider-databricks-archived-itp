@@ -857,7 +857,7 @@ func isDatabricksClusterNotExistsError(err error) bool {
 	if de, ok := err.(autorest.DetailedError); ok {
 		oe := de.Original
 		if e, ok := oe.(*databricks.Error); ok {
-			if clusters.ErrorCode(e.ErrorCode) == clusters.ErrorCode(clusters.ErrorCodeINVALIDPARAMETERVALUE) {
+			if clusters.ErrorCode(e.ErrorCode) == clusters.ErrorCodeINVALIDPARAMETERVALUE {
 				return true
 			}
 		}
