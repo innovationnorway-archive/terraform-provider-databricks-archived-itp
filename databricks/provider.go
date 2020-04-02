@@ -22,6 +22,13 @@ func Provider() terraform.ResourceProvider {
 				ExactlyOneOf: []string{"token", "azure"},
 			},
 
+			"organization_id": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				DefaultFunc:   schema.EnvDefaultFunc("DATABRICKS_ORGANIZATION_ID", nil),
+				ConflictsWith: []string{"azure"},
+			},
+
 			"azure": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -93,9 +100,9 @@ func Provider() terraform.ResourceProvider {
 func providerConfigure(p *schema.Provider) schema.ConfigureFunc {
 	return func(d *schema.ResourceData) (interface{}, error) {
 		config := Config{
-			Token: d.Get("token").(string),
-			Host:  d.Get("host").(string),
-
+			Token:            d.Get("token").(string),
+			Host:             d.Get("host").(string),
+			OrganizationID:   d.Get("organization_id").(string),
 			terraformVersion: p.TerraformVersion,
 		}
 

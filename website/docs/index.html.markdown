@@ -42,6 +42,8 @@ The following arguments are supported in the `provider` block:
 
 * `token` - (Required) A [personal access token](https://docs.databricks.com/dev-tools/api/latest/authentication.html#authentication). This is used to access Databricks REST APIs. It can also be sourced from the `DATABRICKS_TOKEN` environment variable.
 
+* `organization_id` - (Optional) A workspace organization ID. The random number after `o=` in the workspace URL is the organization ID. It can also be sourced from the `DATABRICKS_ORGANIZATION_ID` environment variable.
+
 * `azure` - (Optional) A `azure` block supports the following arguments:
 
   * `workspace_id` - (Required) The resource ID for the Azure Databricks workspace. It can also be sourced from the `DATABRICKS_AZURE_WORKSPACE_ID` environment variable.
