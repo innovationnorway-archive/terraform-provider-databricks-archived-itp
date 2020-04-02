@@ -7,8 +7,7 @@ import (
 
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/hashicorp/terraform/httpclient"
-	azureAuth "github.com/innovationnorway/go-azure/auth"
-	"github.com/innovationnorway/go-databricks/auth"
+	"github.com/innovationnorway/go-azure/auth"
 	"github.com/innovationnorway/go-databricks/clusters"
 	"github.com/innovationnorway/go-databricks/databricks"
 	"github.com/innovationnorway/go-databricks/groups"
@@ -19,10 +18,10 @@ import (
 const TerraformProviderUserAgent = "terraform-provider-databricks"
 
 type Config struct {
-	Token string
-	Host  string
-	Azure *AzureConfig
-
+	Token            string
+	Host             string
+	Azure            *AzureConfig
+	OrganizationID   string
 	terraformVersion string
 }
 
@@ -89,40 +88,46 @@ func configureClient(client *autorest.Client, authorizer autorest.Authorizer, tf
 }
 
 func (c *Config) getAuthorizer() (autorest.Authorizer, error) {
-	var authorizer autorest.Authorizer
-
-	if c.Token != "" {
-		authorizer = auth.NewTokenAuthorizer(c.Token)
-	}
-
 	if c.Azure != nil {
-		config := azureAuth.Config{}
-
 		if c.Azure.ServicePrincipal != nil {
-			config.ClientID = c.Azure.ServicePrincipal.ClientID
-			config.ClientSecret = c.Azure.ServicePrincipal.ClientSecret
-			config.TenantID = c.Azure.ServicePrincipal.TenantID
-			config.Environment = c.Azure.ServicePrincipal.Environment
+			config := auth.Config{
+				ClientID:     c.Azure.ServicePrincipal.ClientID,
+				ClientSecret: c.Azure.ServicePrincipal.ClientSecret,
+				TenantID:     c.Azure.ServicePrincipal.TenantID,
+				Environment:  c.Azure.ServicePrincipal.Environment,
+			}
+
+			managementToken, err := auth.GetToken(config)
+			if err != nil {
+				return nil, err
+			}
+
+			config.Resource = databricks.AzureDatabricksApplicationID
+			token, err := auth.GetToken(config)
+			if err != nil {
+				return nil, err
+			}
+
+			return databricks.NewTokenAuthorizerWithServicePrincipal(
+				token.OAuthToken(),
+				managementToken.OAuthToken(),
+				c.Azure.WorkspaceID), nil
 		}
 
-		managementToken, err := azureAuth.GetToken(config)
+		config := auth.Config{Resource: databricks.AzureDatabricksApplicationID}
+		token, err := auth.GetToken(config)
 		if err != nil {
 			return nil, err
 		}
 
-		config.Resource = auth.AzureDatabricksApplicationID
-		token, err := azureAuth.GetToken(config)
-		if err != nil {
-			return nil, err
-		}
-
-		authorizer = auth.NewAzureDatabricksAuthorizer(
-			token.OAuthToken(),
-			managementToken.OAuthToken(),
-			c.Azure.WorkspaceID)
+		return databricks.NewTokenAuthorizerWithWorkspaceID(token.OAuthToken(), c.Azure.WorkspaceID), nil
 	}
 
-	return authorizer, nil
+	if c.OrganizationID != "" {
+		return databricks.NewTokenAuthorizerWithOrgID(c.Token, c.OrganizationID), nil
+	}
+
+	return databricks.NewTokenAuthorizer(c.Token), nil
 }
 
 func getUserAgent(terraformVersion string) string {
