@@ -87,6 +87,7 @@ func resourceDatabricksCluster() *schema.Resource {
 						"availability": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 							ValidateFunc: validation.StringInSlice([]string{
 								string(clusters.ONDEMAND),
 								string(clusters.SPOT),
@@ -95,18 +96,22 @@ func resourceDatabricksCluster() *schema.Resource {
 						},
 
 						"zone_id": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringIsNotEmpty,
 						},
 
 						"instance_profile_arn": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringIsNotEmpty,
 						},
 
 						"spot_bid_price_percent": {
-							Type:     schema.TypeInt,
-							Optional: true,
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(1, 10000),
 						},
 
 						"ebs_volume_type": {
@@ -119,13 +124,15 @@ func resourceDatabricksCluster() *schema.Resource {
 						},
 
 						"ebs_volume_count": {
-							Type:     schema.TypeInt,
-							Optional: true,
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(1, 10),
 						},
 
 						"ebs_volume_size": {
-							Type:     schema.TypeInt,
-							Optional: true,
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.NoZeroValues,
 						},
 					},
 				},
@@ -634,43 +641,35 @@ func expandClusterAwsAttributes(input []interface{}) *clusters.AwsAttributes {
 	result := clusters.AwsAttributes{}
 
 	if v, ok := values["first_on_demand"]; ok {
-		firstOnDemand := v.(int32)
-		result.FirstOnDemand = &firstOnDemand
+		result.FirstOnDemand = to.Int32Ptr(int32(v.(int)))
 	}
 
-	if v, ok := values["availability"]; ok {
-		availability := clusters.Availability(v.(string))
-		result.Availability = availability
+	if v := values["availability"].(string); v != "" {
+		result.Availability = clusters.Availability(v)
 	}
 
-	if v, ok := values["zone_id"]; ok {
-		zoneID := v.(string)
-		result.ZoneID = &zoneID
+	if v := values["zone_id"].(string); v != "" {
+		result.ZoneID = to.StringPtr(v)
 	}
 
-	if v, ok := values["instance_profile_arn"]; ok {
-		instanceProfileArn := v.(string)
-		result.InstanceProfileArn = &instanceProfileArn
+	if v := values["instance_profile_arn"].(string); v != "" {
+		result.InstanceProfileArn = to.StringPtr(v)
 	}
 
-	if v, ok := values["spot_bid_price_percent"]; ok {
-		spotBidPricePercent := v.(int32)
-		result.SpotBidPricePercent = &spotBidPricePercent
+	if v := int32(values["spot_bid_price_percent"].(int)); v > 0 {
+		result.SpotBidPricePercent = to.Int32Ptr(v)
 	}
 
-	if v, ok := values["availability"]; ok {
-		volumeType := clusters.EbsVolumeType(v.(string))
-		result.EbsVolumeType = volumeType
+	if v := values["ebs_volume_type"]; v != "" {
+		result.EbsVolumeType = clusters.EbsVolumeType(v.(string))
 	}
 
-	if v, ok := values["ebs_volume_count"]; ok {
-		ebsVolumeCount := v.(int32)
-		result.EbsVolumeCount = &ebsVolumeCount
+	if v := int32(values["ebs_volume_count"].(int)); v > 0 {
+		result.EbsVolumeCount = to.Int32Ptr(v)
 	}
 
-	if v, ok := values["ebs_volume_size"]; ok {
-		ebsVolumeSize := v.(int32)
-		result.EbsVolumeSize = &ebsVolumeSize
+	if v := int32(values["ebs_volume_size"].(int)); v > 0 {
+		result.EbsVolumeSize = to.Int32Ptr(v)
 	}
 
 	return &result
