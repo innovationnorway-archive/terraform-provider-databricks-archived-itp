@@ -388,7 +388,7 @@ func resourceDatabricksClusterCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if v, ok := d.GetOk("num_workers"); ok {
-		attributes.NumWorkers = to.Int32Ptr(v.(int32))
+		attributes.NumWorkers = to.Int32Ptr(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("autoscale"); ok {
@@ -507,7 +507,7 @@ func resourceDatabricksClusterUpdate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if v, ok := d.GetOk("num_workers"); ok {
-		attributes.NumWorkers = to.Int32Ptr(v.(int32))
+		attributes.NumWorkers = to.Int32Ptr(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("autoscale"); ok {
