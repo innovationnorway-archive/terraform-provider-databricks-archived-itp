@@ -3,6 +3,7 @@ package databricks
 import (
 	"fmt"
 
+	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/innovationnorway/go-databricks/groups"
@@ -29,10 +30,8 @@ func resourceDatabricksGroupCreate(d *schema.ResourceData, meta interface{}) err
 	client := meta.(*Meta).Groups
 	ctx := meta.(*Meta).StopContext
 
-	name := d.Get("name").(string)
-
 	attributes := groups.Attributes{
-		GroupName: &name,
+		GroupName: to.StringPtr(d.Get("name").(string)),
 	}
 
 	resp, err := client.Create(ctx, attributes)
@@ -41,7 +40,7 @@ func resourceDatabricksGroupCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	d.Set("name", resp.GroupName)
-	d.SetId(*resp.GroupName)
+	d.SetId(to.String(resp.GroupName))
 
 	return resourceDatabricksGroupRead(d, meta)
 }
@@ -70,10 +69,8 @@ func resourceDatabricksGroupDelete(d *schema.ResourceData, meta interface{}) err
 	client := meta.(*Meta).Groups
 	ctx := meta.(*Meta).StopContext
 
-	name := d.Get("name").(string)
-
 	attributes := groups.DeleteAttributes{
-		GroupName: &name,
+		GroupName: to.StringPtr(d.Get("name").(string)),
 	}
 
 	_, err := client.Delete(ctx, attributes)

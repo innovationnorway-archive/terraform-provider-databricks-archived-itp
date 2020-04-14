@@ -382,12 +382,9 @@ func resourceDatabricksClusterCreate(d *schema.ResourceData, meta interface{}) e
 	client := meta.(*Meta).Clusters
 	ctx := meta.(*Meta).StopContext
 
-	sparkVersion := d.Get("spark_version").(string)
-	nodeTypeID := d.Get("node_type_id").(string)
-
 	attributes := clusters.Attributes{
-		SparkVersion: &sparkVersion,
-		NodeTypeID:   &nodeTypeID,
+		SparkVersion: to.StringPtr(d.Get("spark_version").(string)),
+		NodeTypeID:   to.StringPtr(d.Get("node_type_id").(string)),
 	}
 
 	if v, ok := d.GetOk("num_workers"); ok {
@@ -459,7 +456,7 @@ func resourceDatabricksClusterCreate(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("unable to create cluster: %s", err)
 	}
 
-	d.SetId(*resp.ClusterID)
+	d.SetId(to.String(resp.ClusterID))
 
 	return resourceDatabricksClusterRead(d, meta)
 }
@@ -503,14 +500,10 @@ func resourceDatabricksClusterUpdate(d *schema.ResourceData, meta interface{}) e
 	client := meta.(*Meta).Clusters
 	ctx := meta.(*Meta).StopContext
 
-	clusterID := d.Id()
-	sparkVersion := d.Get("spark_version").(string)
-	nodeTypeID := d.Get("node_type_id").(string)
-
 	attributes := clusters.EditAttributes{
-		ClusterID:    &clusterID,
-		SparkVersion: &sparkVersion,
-		NodeTypeID:   &nodeTypeID,
+		ClusterID:    to.StringPtr(d.Id()),
+		SparkVersion: to.StringPtr(d.Get("spark_version").(string)),
+		NodeTypeID:   to.StringPtr(d.Get("node_type_id").(string)),
 	}
 
 	if v, ok := d.GetOk("num_workers"); ok {
@@ -585,10 +578,8 @@ func resourceDatabricksClusterDelete(d *schema.ResourceData, meta interface{}) e
 	client := meta.(*Meta).Clusters
 	ctx := meta.(*Meta).StopContext
 
-	clusterID := d.Id()
-
 	attributes := clusters.PermanentDeleteAttributes{
-		ClusterID: &clusterID,
+		ClusterID: to.StringPtr(d.Id()),
 	}
 
 	_, err := client.PermanentDelete(ctx, attributes)
@@ -607,15 +598,14 @@ func expandClusterAutoscale(input []interface{}) *clusters.AutoScale {
 	}
 
 	values := input[0].(map[string]interface{})
-
 	result := &clusters.AutoScale{}
 
-	if v, ok := values["min_workers"]; ok {
-		result.MinWorkers = to.Int32Ptr(int32(v.(int)))
+	if v, ok := values["min_workers"].(int); ok && v > 0 {
+		result.MinWorkers = to.Int32Ptr(int32(v))
 	}
 
-	if v, ok := values["max_workers"]; ok {
-		result.MaxWorkers = to.Int32Ptr(int32(v.(int)))
+	if v, ok := values["max_workers"].(int); ok && v > 0 {
+		result.MaxWorkers = to.Int32Ptr(int32(v))
 	}
 
 	return result
@@ -644,32 +634,32 @@ func expandClusterAwsAttributes(input []interface{}) *clusters.AwsAttributes {
 		result.FirstOnDemand = to.Int32Ptr(int32(v.(int)))
 	}
 
-	if v := values["availability"].(string); v != "" {
+	if v, ok := values["availability"].(string); ok && v != "" {
 		result.Availability = clusters.Availability(v)
 	}
 
-	if v := values["zone_id"].(string); v != "" {
+	if v, ok := values["zone_id"].(string); ok && v != "" {
 		result.ZoneID = to.StringPtr(v)
 	}
 
-	if v := values["instance_profile_arn"].(string); v != "" {
+	if v, ok := values["instance_profile_arn"].(string); ok && v != "" {
 		result.InstanceProfileArn = to.StringPtr(v)
 	}
 
-	if v := int32(values["spot_bid_price_percent"].(int)); v > 0 {
-		result.SpotBidPricePercent = to.Int32Ptr(v)
+	if v, ok := values["spot_bid_price_percent"].(int); ok && v > 0 {
+		result.SpotBidPricePercent = to.Int32Ptr(int32(v))
 	}
 
-	if v := values["ebs_volume_type"]; v != "" {
+	if v, ok := values["ebs_volume_type"]; ok && v != "" {
 		result.EbsVolumeType = clusters.EbsVolumeType(v.(string))
 	}
 
-	if v := int32(values["ebs_volume_count"].(int)); v > 0 {
-		result.EbsVolumeCount = to.Int32Ptr(v)
+	if v, ok := values["ebs_volume_count"].(int); ok && v > 0 {
+		result.EbsVolumeCount = to.Int32Ptr(int32(v))
 	}
 
-	if v := int32(values["ebs_volume_size"].(int)); v > 0 {
-		result.EbsVolumeSize = to.Int32Ptr(v)
+	if v, ok := values["ebs_volume_size"].(int); ok && v > 0 {
+		result.EbsVolumeSize = to.Int32Ptr(int32(v))
 	}
 
 	return &result
@@ -679,7 +669,7 @@ func expandClusterCustomTags(input map[string]interface{}) map[string]*string {
 	result := make(map[string]*string, len(input))
 
 	for k, v := range input {
-		result[k] = v.(*string)
+		result[k] = to.StringPtr(v.(string))
 	}
 
 	return result
@@ -695,13 +685,11 @@ func expandClusterLogConf(input []interface{}) *clusters.LogConf {
 	result := clusters.LogConf{}
 
 	if v, ok := values["dbfs"]; ok {
-		storageInfo := expandClusterStorageInfoDbfs(v.([]interface{}))
-		result.Dbfs = storageInfo
+		result.Dbfs = expandClusterStorageInfoDbfs(v.([]interface{}))
 	}
 
 	if v, ok := values["s3"]; ok {
-		storageInfo := expandClusterStorageInfoS3(v.([]interface{}))
-		result.S3 = storageInfo
+		result.S3 = expandClusterStorageInfoS3(v.([]interface{}))
 	}
 
 	return &result
@@ -719,13 +707,11 @@ func expandClusterInitScripts(input []interface{}) *[]clusters.InitScriptInfo {
 		result := clusters.InitScriptInfo{}
 
 		if v, ok := values["dbfs"]; ok {
-			storageInfo := expandClusterStorageInfoDbfs(v.([]interface{}))
-			result.Dbfs = storageInfo
+			result.Dbfs = expandClusterStorageInfoDbfs(v.([]interface{}))
 		}
 
 		if v, ok := values["s3"]; ok {
-			storageInfo := expandClusterStorageInfoS3(v.([]interface{}))
-			result.S3 = storageInfo
+			result.S3 = expandClusterStorageInfoS3(v.([]interface{}))
 		}
 
 		results = append(results, result)
@@ -744,8 +730,7 @@ func expandClusterStorageInfoDbfs(input []interface{}) *clusters.DbfsStorageInfo
 	result := clusters.DbfsStorageInfo{}
 
 	if v, ok := values["destination"]; ok {
-		destination := v.(string)
-		result.Destination = &destination
+		result.Destination = to.StringPtr(v.(string))
 	}
 
 	return &result
@@ -761,38 +746,31 @@ func expandClusterStorageInfoS3(input []interface{}) *clusters.S3StorageInfo {
 	result := clusters.S3StorageInfo{}
 
 	if v, ok := values["destination"]; ok {
-		destination := v.(string)
-		result.Destination = &destination
+		result.Destination = to.StringPtr(v.(string))
 	}
 
 	if v, ok := values["region"]; ok {
-		region := v.(string)
-		result.Region = &region
+		result.Region = to.StringPtr(v.(string))
 	}
 
 	if v, ok := values["endpoint"]; ok {
-		endpoint := v.(string)
-		result.Endpoint = &endpoint
+		result.Endpoint = to.StringPtr(v.(string))
 	}
 
 	if v, ok := values["enable_encryption"]; ok {
-		enableEncryption := v.(bool)
-		result.EnableEncryption = &enableEncryption
+		result.EnableEncryption = to.BoolPtr(v.(bool))
 	}
 
 	if v, ok := values["encryption_type"]; ok {
-		encryptionType := v.(string)
-		result.EncryptionType = &encryptionType
+		result.EncryptionType = to.StringPtr(v.(string))
 	}
 
 	if v, ok := values["kms_key"]; ok {
-		kmsKey := v.(string)
-		result.KmsKey = &kmsKey
+		result.KmsKey = to.StringPtr(v.(string))
 	}
 
 	if v, ok := values["canned_acl"]; ok {
-		cannedACL := v.(string)
-		result.CannedACL = &cannedACL
+		result.CannedACL = to.StringPtr(v.(string))
 	}
 
 	return &result
@@ -808,13 +786,11 @@ func expandClusterDockerImage(input []interface{}) *clusters.DockerImage {
 	result := clusters.DockerImage{}
 
 	if v, ok := values["url"]; ok {
-		url := v.(string)
-		result.URL = &url
+		result.URL = to.StringPtr(v.(string))
 	}
 
 	if v, ok := values["basic_auth"]; ok {
-		basicAuth := expandClusterDockerBasicAuth(v.([]interface{}))
-		result.BasicAuth = basicAuth
+		result.BasicAuth = expandClusterDockerBasicAuth(v.([]interface{}))
 	}
 
 	return &result
@@ -830,13 +806,11 @@ func expandClusterDockerBasicAuth(input []interface{}) *clusters.DockerBasicAuth
 	result := clusters.DockerBasicAuth{}
 
 	if v, ok := values["username"]; ok {
-		username := v.(string)
-		result.Username = &username
+		result.Username = to.StringPtr(v.(string))
 	}
 
 	if v, ok := values["password"]; ok {
-		password := v.(string)
-		result.Password = &password
+		result.Password = to.StringPtr(v.(string))
 	}
 
 	return &result
@@ -846,7 +820,7 @@ func expandClusterSparkEnvVars(input map[string]interface{}) map[string]*string 
 	result := make(map[string]*string, len(input))
 
 	for k, v := range input {
-		result[k] = v.(*string)
+		result[k] = to.StringPtr(v.(string))
 	}
 
 	return result
