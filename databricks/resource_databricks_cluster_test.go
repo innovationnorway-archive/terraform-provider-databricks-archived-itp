@@ -9,6 +9,47 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
+func TestAccDatabricksCluster_AutoScale(t *testing.T) {
+	resourceName := "databricks_cluster.test"
+	clusterName := acctest.RandString(6)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckDatabricksClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDatabricksClusterAutoScale(clusterName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "cluster_name", clusterName),
+					resource.TestCheckResourceAttr(resourceName, "autoscale.0.min_workers", "2"),
+					resource.TestCheckResourceAttr(resourceName, "autoscale.0.max_workers", "8"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDatabricksCluster_NumWorkers(t *testing.T) {
+	resourceName := "databricks_cluster.test"
+	clusterName := acctest.RandString(6)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckDatabricksClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDatabricksClusterNumWorkers(clusterName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "cluster_name", clusterName),
+					resource.TestCheckResourceAttr(resourceName, "num_workers", "2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccDatabricksCluster_Azure(t *testing.T) {
 	resourceName := "databricks_cluster.test"
 	clusterName := acctest.RandString(6)
@@ -74,6 +115,37 @@ func testAccCheckDatabricksClusterDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccDatabricksClusterAutoScale(clusterName string) string {
+	return fmt.Sprintf(`
+resource "databricks_cluster" "test" {
+  cluster_name  = "%s"
+  spark_version = "6.3.x-scala2.11"
+  node_type_id  = "Standard_DS3_v2"
+
+  autoscale {
+    min_workers = 2
+    max_workers = 8
+  }
+
+  autotermination_minutes = 120
+}
+`, clusterName)
+}
+
+func testAccDatabricksClusterNumWorkers(clusterName string) string {
+	return fmt.Sprintf(`
+resource "databricks_cluster" "test" {
+  cluster_name  = "%s"
+  spark_version = "6.3.x-scala2.11"
+  node_type_id  = "Standard_DS3_v2"
+
+  num_workers = 2
+
+  autotermination_minutes = 120
+}
+`, clusterName)
 }
 
 func testAccDatabricksClusterAzure(clusterName string) string {
