@@ -10,3 +10,5 @@ require (
 	github.com/innovationnorway/go-azure v0.0.0-20200325011807-fc51476d2a64
 	github.com/innovationnorway/go-databricks v0.0.0-20200402192012-a92f565d43b1
 )
+
+replace github.com/innovationnorway/go-databricks => github.com/datarootsio/go-databricks v0.0.0-20200424142156-b4627cfd7675
