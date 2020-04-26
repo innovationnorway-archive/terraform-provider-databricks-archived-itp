@@ -10,7 +10,7 @@ import (
 
 func TestAccDatabricksDbfsUpload_basic(t *testing.T) {
 	resourceName := "databricks_dbfs_upload.test"
-	path := fmt.Sprintf("/mnt/foo/bar.txt")
+	path := "/mnt/foo/bar.txt"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
