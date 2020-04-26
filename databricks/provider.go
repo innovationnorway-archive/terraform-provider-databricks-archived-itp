@@ -89,7 +89,9 @@ func Provider() terraform.ResourceProvider {
 			"databricks_group":            resourceDatabricksGroup(),
 			"databricks_group_member":     resourceDatabricksGroupMember(),
 			"databricks_workspace_import": resourceDatabricksWorkspaceImport(),
+			"databricks_secret":           resourceDatabricksSecret(),
 			"databricks_secret_scope":     resourceDatabricksSecretScope(),
+			"databricks_secret_acl":       resourceDatabricksSecretAcl(),
 		},
 	}
 

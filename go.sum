@@ -93,6 +93,12 @@ github.com/coreos/go-systemd v0.0.0-20181012123002-c6f51f82210d/go.mod h1:F5haX7
 github.com/coreos/pkg v0.0.0-20180928190104-399ea9e2e55f/go.mod h1:E3G3o1h8I7cfcXa63jLwjI0eiQQMgzzUDFVpN/nH/eA=
 github.com/datarootsio/go-databricks v0.0.0-20200424142156-b4627cfd7675 h1:VGjiVVnhks6LNttg2Y1kaEkrVbkLHF5Li8inTTQ3YTQ=
 github.com/datarootsio/go-databricks v0.0.0-20200424142156-b4627cfd7675/go.mod h1:QEGWP0EpIlkLC/nh20I7yFnhfzsTm4VEbmLsCA/DNzA=
+github.com/datarootsio/go-databricks v0.0.0-20200425054101-387cfcdc16d7 h1:FFnoTsdmkemi36fPClWO88WH1g66cNCY+BHJo7ixMSk=
+github.com/datarootsio/go-databricks v0.0.0-20200425054101-387cfcdc16d7/go.mod h1:QEGWP0EpIlkLC/nh20I7yFnhfzsTm4VEbmLsCA/DNzA=
+github.com/datarootsio/go-databricks v0.0.0-20200425135022-e329839ce89f h1:eTP9Rdn1ZIQ2YYvPi6dDcsy2vqJUaLB2XFPFcC/4Ibc=
+github.com/datarootsio/go-databricks v0.0.0-20200425135022-e329839ce89f/go.mod h1:QEGWP0EpIlkLC/nh20I7yFnhfzsTm4VEbmLsCA/DNzA=
+github.com/datarootsio/go-databricks v0.0.0-20200426042522-8a0dc8f0509e h1:f1qEArHiITsUKWQvQcfkazOh9J6TaPbKBfa1/NFATWM=
+github.com/datarootsio/go-databricks v0.0.0-20200426042522-8a0dc8f0509e/go.mod h1:QEGWP0EpIlkLC/nh20I7yFnhfzsTm4VEbmLsCA/DNzA=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
