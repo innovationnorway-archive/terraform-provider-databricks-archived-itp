@@ -86,6 +86,8 @@ func Provider() terraform.ResourceProvider {
 
 		ResourcesMap: map[string]*schema.Resource{
 			"databricks_cluster":          resourceDatabricksCluster(),
+			"databricks_dbfs_mkdirs":      resourceDatabricksDbfsMkdirs(),
+			"databricks_dbfs_upload":      resourceDatabricksDbfsUpload(),
 			"databricks_group":            resourceDatabricksGroup(),
 			"databricks_group_member":     resourceDatabricksGroupMember(),
 			"databricks_workspace_import": resourceDatabricksWorkspaceImport(),

@@ -10,6 +10,7 @@ import (
 	"github.com/innovationnorway/go-azure/auth"
 	"github.com/innovationnorway/go-databricks/clusters"
 	"github.com/innovationnorway/go-databricks/databricks"
+	"github.com/innovationnorway/go-databricks/dbfs"
 	"github.com/innovationnorway/go-databricks/groups"
 	"github.com/innovationnorway/go-databricks/secrets"
 	"github.com/innovationnorway/go-databricks/workspace"
@@ -40,6 +41,7 @@ type AzureServicePrincipalConfig struct {
 
 type Meta struct {
 	Clusters    clusters.BaseClient
+	Dbfs        dbfs.BaseClient
 	Groups      groups.BaseClient
 	Workspace   workspace.BaseClient
 	Secrets     secrets.BaseClient
@@ -73,6 +75,9 @@ func (c *Config) createClients(baseURI string, authorizer autorest.Authorizer) (
 
 	meta.Clusters = clusters.NewWithBaseURI(baseURI)
 	configureClient(&meta.Clusters.Client, authorizer, c.terraformVersion)
+
+	meta.Dbfs = dbfs.NewWithBaseURI(baseURI)
+	configureClient(&meta.Dbfs.Client, authorizer, c.terraformVersion)
 
 	meta.Groups = groups.NewWithBaseURI(baseURI)
 	configureClient(&meta.Groups.Client, authorizer, c.terraformVersion)

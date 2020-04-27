@@ -2,7 +2,11 @@
 
 ENHANCEMENTS:
 
+* **New Resource:** `databricks_dbfs_mkdirs` ([#53](https://github.com/innovationnorway/terraform-provider-databricks/issues/53))
+
 * **Provider:** Support for specifying the workspace organization ID ([#38](https://github.com/innovationnorway/terraform-provider-databricks/issues/38))
+
+* **New Resource:** `databricks_dbfs_upload` ([#33](https://github.com/innovationnorway/terraform-provider-databricks/issues/33))
 
 * **New Data Source:** `databricks_group_members` ([#27](https://github.com/innovationnorway/terraform-provider-databricks/issues/27))
 
