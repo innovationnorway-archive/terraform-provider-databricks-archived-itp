@@ -91,7 +91,7 @@ func resourceDatabricksSecretScopeDelete(d *schema.ResourceData, meta interface{
 
 	_, err := client.DeleteScope(ctx, attributes)
 	if err != nil {
-		return fmt.Errorf("unable to remove member: %s", err)
+		return fmt.Errorf("unable to delete scope: %s", err)
 	}
 
 	d.SetId("")
@@ -104,11 +104,7 @@ func isExistingScope(scope string, scopes *[]secrets.ScopeAttributes) bool {
 		return false
 	}
 
-	print("DEBUG SCOPES")
-	print(scopes)
-
 	for _, item := range *scopes {
-		print(*item.Name)
 		if scope == *item.Name {
 			return true
 		}

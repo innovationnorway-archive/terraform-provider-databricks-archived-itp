@@ -41,6 +41,7 @@ func resourceDatabricksSecret() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringIsNotEmpty,
 				Sensitive:    true,
+				ExactlyOneOf: []string{"string_value", "bytes_value"},
 			},
 		},
 	}
@@ -93,11 +94,12 @@ func resourceDatabricksSecretRead(d *schema.ResourceData, meta interface{}) erro
 
 	resp, err := client.List(ctx, attributes)
 	if err != nil {
+		if resp.IsHTTPStatus(404) || !isExistingSecret(key, resp.SecretsProperty) {
+			d.SetId("")
+			return nil
+		}
+
 		return fmt.Errorf("unable to get key: %s", err)
-	}
-	if !isExistingSecret(key, resp.SecretsProperty) {
-		d.SetId("")
-		return nil
 	}
 
 	d.Set("scope", scope)

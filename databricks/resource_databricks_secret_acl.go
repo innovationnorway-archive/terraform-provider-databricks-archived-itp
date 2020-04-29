@@ -24,27 +24,19 @@ func resourceDatabricksSecretAcl() *schema.Resource {
 			},
 			"principal": {
 				Type:         schema.TypeString,
-				Optional:     true,
+				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringIsNotEmpty,
 			},
 			"permission": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 				ForceNew: true,
-				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
-					v := val.(string)
-
-					switch v {
-					case
-						"READ",
-						"WRITE",
-						"MANAGE":
-						return
-					}
-					errs = append(errs, fmt.Errorf("%q must be one of READ,WRITE or MANAGE. Got : %s", key, v))
-					return
-				},
+				ValidateFunc: validation.StringInSlice([]string{
+					string(secrets.READ),
+					string(secrets.WRITE),
+					string(secrets.MANAGE),
+				}, false),
 			},
 		},
 	}
