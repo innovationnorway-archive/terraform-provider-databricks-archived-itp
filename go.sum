@@ -225,8 +225,8 @@ github.com/hashicorp/yamux v0.0.0-20181012175058-2f1d1f20f75d h1:kJCB4vdITiW1eC1
 github.com/hashicorp/yamux v0.0.0-20181012175058-2f1d1f20f75d/go.mod h1:+NfK9FKeTrX5uv1uIXGdwYDTeHna2qgaIlx54MXqjAM=
 github.com/innovationnorway/go-azure v0.0.0-20200325011807-fc51476d2a64 h1:+wa3AnWSgKs3LHOdL2TGzxxncO12/z8RKtt76JMhraA=
 github.com/innovationnorway/go-azure v0.0.0-20200325011807-fc51476d2a64/go.mod h1:2m5ahMFX0U5HrAYyCHgr4FMuEUAPkbYQc2b2eqhDAgc=
-github.com/innovationnorway/go-databricks v0.0.0-20200425132214-e6f10f38cbb1 h1:rbJ7y9J2TbbBHCgx9fwympa6kY90extVBzmDdneInDo=
-github.com/innovationnorway/go-databricks v0.0.0-20200425132214-e6f10f38cbb1/go.mod h1:QEGWP0EpIlkLC/nh20I7yFnhfzsTm4VEbmLsCA/DNzA=
+github.com/innovationnorway/go-databricks v0.0.0-20200426114753-6c95da265cf0 h1:PF9nkmaXaKxbSULCIDcItY6b2TX5q9C5b46caZ6N2nk=
+github.com/innovationnorway/go-databricks v0.0.0-20200426114753-6c95da265cf0/go.mod h1:QEGWP0EpIlkLC/nh20I7yFnhfzsTm4VEbmLsCA/DNzA=
 github.com/jmespath/go-jmespath v0.0.0-20160202185014-0b12d6b521d8/go.mod h1:Nht3zPeWKUH0NzdCt2Blrr5ys8VGpn0CEB0cQHVjt7k=
 github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af h1:pmfjZENx5imkbgOkpRUYLnmbU7UEFbjtDA2hxJ1ichM=
 github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af/go.mod h1:Nht3zPeWKUH0NzdCt2Blrr5ys8VGpn0CEB0cQHVjt7k=

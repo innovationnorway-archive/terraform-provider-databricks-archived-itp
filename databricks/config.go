@@ -12,6 +12,7 @@ import (
 	"github.com/innovationnorway/go-databricks/databricks"
 	"github.com/innovationnorway/go-databricks/dbfs"
 	"github.com/innovationnorway/go-databricks/groups"
+	"github.com/innovationnorway/go-databricks/secrets"
 	"github.com/innovationnorway/go-databricks/workspace"
 	"github.com/innovationnorway/terraform-provider-databricks/version"
 )
@@ -43,6 +44,7 @@ type Meta struct {
 	Dbfs        dbfs.BaseClient
 	Groups      groups.BaseClient
 	Workspace   workspace.BaseClient
+	Secrets     secrets.BaseClient
 	StopContext context.Context
 }
 
@@ -82,6 +84,9 @@ func (c *Config) createClients(baseURI string, authorizer autorest.Authorizer) (
 
 	meta.Workspace = workspace.NewWithBaseURI(baseURI)
 	configureClient(&meta.Workspace.Client, authorizer, c.terraformVersion)
+
+	meta.Secrets = secrets.NewWithBaseURI(baseURI)
+	configureClient(&meta.Secrets.Client, authorizer, c.terraformVersion)
 
 	return &meta, nil
 }
