@@ -33,7 +33,3 @@ The following arguments are supported:
 * `principal` - (Required) The principal to which the permission is applied.
 
 * `permission` - (Optional) The permission level applied to the principal. Possible values are: `READ`, `WRITE` and `MANAGE`.
-
-* `bytes_value` - (Optional) The value of the secret stored as bytes.
-
--> **NOTE:** Either `string_value` or `bytes_value` must be specified - but not both.
