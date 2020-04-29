@@ -310,7 +310,7 @@ func resourceDatabricksCluster() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"url": {
-							Type:     schema.TypeInt,
+							Type:     schema.TypeString,
 							Required: true,
 						},
 
