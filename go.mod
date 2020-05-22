@@ -3,7 +3,7 @@ module github.com/innovationnorway/terraform-provider-databricks
 go 1.14
 
 require (
-	github.com/Azure/go-autorest/autorest v0.10.0
+	github.com/Azure/go-autorest/autorest v0.10.2
 	github.com/Azure/go-autorest/autorest/to v0.3.0
 	github.com/hashicorp/terraform v0.12.24
 	github.com/hashicorp/terraform-plugin-sdk v1.10.0
